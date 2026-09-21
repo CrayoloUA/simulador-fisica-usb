@@ -1,4 +1,147 @@
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #475569;
+  --border: #cbd5e1;
+  --accent: #2563eb;
+  --danger: #b91c1c;
+  --warn-bg: #fef3c7;
+  --warn-border: #f59e0b;
+}
+
 body {
   margin: 0;
+  background: var(--bg);
+  color: var(--text);
   font-family: system-ui, sans-serif;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.view,
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.live {
+  margin: 4px 0 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.param {
+  margin-bottom: 12px;
+}
+
+.param label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.symbol {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.param-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.param-row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.param-row input[type='text'] {
+  width: 64px;
+  padding: 4px 6px;
+}
+
+.unit {
+  min-width: 36px;
+  color: var(--muted);
+}
+
+.error {
+  color: var(--danger);
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+.banner {
+  background: var(--warn-bg);
+  border-left: 4px solid var(--warn-border);
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+.transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+button {
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--warn-border);
+  outline-offset: 2px;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.results dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
