@@ -128,18 +128,6 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-.results {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 4px 12px;
-  margin: 0;
-}
-
-.results dd {
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-}
-
 @media (max-width: 800px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
