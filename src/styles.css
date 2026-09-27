@@ -241,6 +241,25 @@ select:focus-visible {
   margin-bottom: 12px;
 }
 
+.secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.option-button {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.option-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
 .experiment-list {
   display: flex;
   flex-direction: column;

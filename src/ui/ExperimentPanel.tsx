@@ -58,7 +58,12 @@ export function ExperimentPanel({
         <h2>Elige un experimento</h2>
         <div className="experiment-list">
           {content.experiments.map((experiment) => (
-            <button key={experiment.id} type="button" onClick={() => onSelectExperiment(experiment.id)}>
+            <button
+              key={experiment.id}
+              type="button"
+              className="secondary"
+              onClick={() => onSelectExperiment(experiment.id)}
+            >
               {experiment.title}
             </button>
           ))}
@@ -72,7 +77,7 @@ export function ExperimentPanel({
   return (
     <section className="experiment-panel" aria-label={experiment.title}>
       <h2>{experiment.title}</h2>
-      <button type="button" onClick={onExit}>
+      <button type="button" className="secondary" onClick={onExit}>
         Volver a la lista
       </button>
 
@@ -145,7 +150,7 @@ export function ExperimentPanel({
               : 'Tu predicción inicial no coincidió con lo observado, y eso también es parte de aprender.'}
           </p>
           <p>{experiment.conclusion}</p>
-          <button type="button" onClick={onExit}>
+          <button type="button" className="secondary" onClick={onExit}>
             Volver a la lista
           </button>
         </div>
