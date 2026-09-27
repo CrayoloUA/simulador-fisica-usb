@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Mockup: panel de experimentos guiados</title>
+<style>
+  :root {
+    --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --muted: #475569;
+    --border: #cbd5e1; --accent: #2563eb; --danger: #b91c1c;
+    --warn-bg: #fef3c7; --warn-border: #f59e0b;
+  }
+  body { margin:0; background:var(--bg); color:var(--text); font-family: system-ui, sans-serif; padding:16px; }
+  h1 { font-size:1.1rem; }
+  .mockup-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap:16px; margin-top:16px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; }
+  .card h2 { margin:0 0 8px; font-size:0.95rem; }
+  .experiment-list { display:flex; flex-direction:column; gap:6px; }
+  button { padding:6px 14px; border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:6px; cursor:pointer; font-size:0.85rem; }
+  .experiment-list button { background:var(--surface); color:var(--text); border-color:var(--border); text-align:left; }
+  .mode-switch { display:flex; gap:8px; margin-bottom:12px; }
+  .mode-switch button.active { background:var(--accent); color:#fff; }
+  .mode-switch button.inactive { background:var(--surface); color:var(--text); border-color:var(--border); }
+  .progress { color:var(--muted); font-size:0.8rem; margin:0 0 4px; }
+  .predict-options, .check-options { display:flex; flex-direction:column; gap:6px; margin:8px 0; }
+  .option-button { background:var(--surface); color:var(--text); border:1px solid var(--border); text-align:left; }
+  .option-button.selected { outline:3px solid var(--accent); }
+  .option-button.disabled { opacity:0.7; }
+  .feedback { margin:6px 0; padding:8px; border-radius:6px; font-size:0.85rem; }
+  .feedback-correct { background:#dcfce7; border-left:4px solid #16a34a; }
+  .feedback-incorrect { background:#fee2e2; border-left:4px solid var(--danger); }
+  .banner-help { background:#eff6ff; border-left:4px solid var(--accent); padding:8px 10px; margin:4px 0 8px; font-size:0.8rem; }
+  .help-toggle { width:20px; height:20px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-size:0.7rem; line-height:1; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+  .row { display:flex; align-items:center; gap:6px; }
+  .presets { display:flex; gap:6px; margin:4px 0; }
+  .presets button { background:var(--surface); color:var(--text); border:1px solid var(--border); padding:2px 10px; font-size:0.75rem; }
+  .secondary { background:var(--surface); color:var(--text); border:1px solid var(--border); }
+  small.caption { display:block; color:var(--muted); margin-bottom:6px; }
+</style>
+</head>
+<body>
+  <h1>Mockup — capa pedagógica del laboratorio MAS (estático, sin interacción real)</h1>
+  <p style="color:var(--muted); max-width:640px;">Muestra los estados de la sección 12 del diseño con la paleta ya usada en la app (<code>DESIGN.md</code>). No es funcional: es para revisar layout, copy y color antes de construir <code>ExperimentPanel</code>.</p>
+
+  <div class="mockup-grid">
+
+    <div class="card">
+      <h2>0. Encabezado con el selector de modo</h2>
+      <div class="mode-switch">
+        <button class="inactive">Explorar</button>
+        <button class="active">Experimentos</button>
+      </div>
+      <small class="caption">Modo Explorar con ayuda en contexto (referencia)</small>
+      <div class="row">
+        <label>Longitud L</label>
+        <button class="help-toggle">?</button>
+      </div>
+      <div class="banner-help">Qué tan largo es el hilo, desde donde cuelga hasta el centro de la bolita. Un péndulo de reloj de pared mide cerca de 1 m.</div>
+      <div class="presets">
+        <button>Tierra</button><button>Luna</button><button>Marte</button><button>Júpiter</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>1. Elegir experimento</h2>
+      <div class="experiment-list">
+        <button>Conoce el péndulo</button>
+        <button>¿Depende de la masa?</button>
+        <button>¿Depende de la longitud?</button>
+        <button>¿Depende de la gravedad?</button>
+        <button>¿Y del ángulo?</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Etapa: Predecir</h2>
+      <button class="secondary">Volver a la lista</button>
+      <p><strong>¿Depende de la masa?</strong></p>
+      <p>¿Crees que un péndulo con una bolita más pesada oscila más rápido, más lento o igual?</p>
+      <div class="predict-options">
+        <button class="option-button">Más rápido (T menor)</button>
+        <button class="option-button selected">Más lento (T mayor)</button>
+        <button class="option-button disabled">Igual (T no cambia)</button>
+      </div>
+      <button>Continuar</button>
+    </div>
+
+    <div class="card">
+      <h2>3. Etapa: Pasos (con resaltado)</h2>
+      <p class="progress">Paso 2 de 3</p>
+      <p>Sin cambiar nada más, cambia la Masa m a 5 kg.</p>
+      <div class="row" style="outline:3px solid var(--warn-border); outline-offset:4px; border-radius:6px; padding:6px; width:fit-content;">
+        <label>Masa m</label>
+        <input type="text" value="5" style="width:50px;" />
+      </div>
+      <p style="margin-top:10px;"><button>Continuar</button></p>
+    </div>
+
+    <div class="card">
+      <h2>4a. Etapa: Comprobar — respuesta correcta</h2>
+      <p class="progress">Pregunta 1 de 1</p>
+      <p>¿Qué le pasó al Período T al aumentar la masa de 0,5 kg a 5 kg?</p>
+      <div class="check-options">
+        <button class="option-button disabled">Aumentó</button>
+        <button class="option-button disabled">Disminuyó</button>
+        <button class="option-button selected">No cambió</button>
+      </div>
+      <div class="feedback feedback-correct">Correcto: la fórmula T = 2π√(L/g) no incluye la masa. Galileo lo notó observando lámparas de una catedral que oscilaban con distinto peso.</div>
+      <button>Continuar</button>
+    </div>
+
+    <div class="card">
+      <h2>4b. Etapa: Comprobar — respuesta incorrecta</h2>
+      <p class="progress">Pregunta 1 de 1</p>
+      <p>¿Qué le pasó al Período T al aumentar la masa de 0,5 kg a 5 kg?</p>
+      <div class="check-options">
+        <button class="option-button selected">Aumentó</button>
+        <button class="option-button disabled">Disminuyó</button>
+        <button class="option-button disabled">No cambió</button>
+      </div>
+      <div class="feedback feedback-incorrect">Revisa de nuevo: T = 2π√(L/g) no incluye la masa, así que no debería haber aumentado.</div>
+      <button disabled style="opacity:0.5; cursor:not-allowed;">Continuar</button>
+    </div>
+
+    <div class="card">
+      <h2>5. Etapa: Conclusión</h2>
+      <p><em>Tu predicción inicial no coincidió con lo observado, y eso también es parte de aprender.</em></p>
+      <p>El Período no depende de la masa: T = 2π√(L/g) solo depende de la longitud L y de la gravedad g.</p>
+      <button class="secondary">Volver a la lista</button>
+    </div>
+
+  </div>
+</body>
+</html>
