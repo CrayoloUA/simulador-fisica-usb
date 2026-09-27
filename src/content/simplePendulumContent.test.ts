@@ -3,7 +3,7 @@ import { simplePendulum } from '../engine/phenomena/simplePendulum';
 import { defaultParams } from '../engine/validate';
 import { simplePendulumContent } from './simplePendulumContent';
 
-function periodFor(overrides: Partial<Record<string, number>>): number {
+function periodFor(overrides: Record<string, number>): number {
   const params = { ...defaultParams(simplePendulum.paramSchema), ...overrides };
   return simplePendulum.outputs(simplePendulum.initialState(params), params).T;
 }
