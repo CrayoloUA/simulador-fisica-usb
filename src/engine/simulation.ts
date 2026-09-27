@@ -68,11 +68,13 @@ export class Simulation {
   }
 
   private recordSample(): void {
-    this.samples.push({
-      t: this.t,
-      values: this.phenomenon.outputs(this.state, this.params),
-      theory: this.phenomenon.theory(this.params, this.t),
-    });
+    const values = this.phenomenon.outputs(this.state, this.params);
+    const theory = this.phenomenon.theory(this.params, this.t);
+    if (!Object.values(values).every(Number.isFinite) || !Object.values(theory).every(Number.isFinite)) {
+      this.error = 'La simulación se detuvo: el cálculo produjo un valor no válido.';
+      return;
+    }
+    this.samples.push({ t: this.t, values, theory });
     if (this.samples.length > this.maxSamples) this.samples.shift();
   }
 }

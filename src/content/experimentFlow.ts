@@ -34,7 +34,10 @@ export function answerCheck(state: FlowState, optionId: string): FlowState {
 
 export function canAdvance(state: FlowState): boolean {
   if (state.phase === 'predict') return state.predictedOptionId !== null;
-  if (state.phase === 'check') return state.checkAnswers[state.questionIndex] !== null;
+  if (state.phase === 'check') {
+    const answer = state.checkAnswers[state.questionIndex];
+    return answer !== null && answer !== undefined;
+  }
   return true;
 }
 

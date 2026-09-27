@@ -3,7 +3,7 @@ import type { ParamSpec, Params } from './types';
 
 export interface ValidationResult {
   ok: boolean;
-  params: Params;
+  params: Partial<Params>;
   errors: Record<string, string>;
 }
 
