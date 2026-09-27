@@ -27,8 +27,10 @@ export function ParamControl({ spec, raw, error, help, presets, highlighted, onC
 
   return (
     <div className={highlighted ? 'param param-highlighted' : 'param'}>
-      <label htmlFor={id}>
-        {spec.label} <span className="symbol">{spec.symbol}</span>
+      <div className="param-label-row">
+        <label htmlFor={id}>
+          {spec.label} <span className="symbol">{spec.symbol}</span>
+        </label>
         {help && (
           <button
             type="button"
@@ -41,7 +43,7 @@ export function ParamControl({ spec, raw, error, help, presets, highlighted, onC
             ?
           </button>
         )}
-      </label>
+      </div>
       {help && helpOpen && (
         <p id={helpId} className="help-card">
           {help}

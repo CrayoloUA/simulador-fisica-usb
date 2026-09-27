@@ -38,12 +38,17 @@ export default function App() {
 
   useEffect(() => {
     setParams((prev) => {
-      const next = { ...prev, ...validation.params };
+      const next = { ...prev };
+      for (const [key, value] of Object.entries(validation.params)) {
+        if (value !== undefined) next[key] = value;
+      }
       return phenomenon.paramSchema.every((spec) => next[spec.key] === prev[spec.key]) ? prev : next;
     });
   }, [validation]);
 
-  const warnings = phenomenon.modelLimits.map((limit) => limit.evaluate(params)).filter((r) => !r.valid);
+  const warnings = phenomenon.modelLimits
+    .map((limit) => ({ id: limit.id, result: limit.evaluate(params) }))
+    .filter((warning) => !warning.result.valid);
   const results = phenomenon.outputs(phenomenon.initialState(params), params);
   const activeExperiment = experimentId ? content.experiments.find((e) => e.id === experimentId) ?? null : null;
   const currentStep =
@@ -137,8 +142,8 @@ export default function App() {
             />
           ))}
           {warnings.map((warning) => (
-            <p key={warning.message} className="banner" role="status">
-              <strong>Aviso:</strong> {warning.message}
+            <p key={warning.id} className="banner" role="status">
+              <strong>Aviso:</strong> {warning.result.message}
             </p>
           ))}
           <div className="transport">

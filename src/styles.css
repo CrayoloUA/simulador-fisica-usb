@@ -60,8 +60,14 @@ canvas {
 }
 
 .param label {
-  display: block;
+  display: inline;
   font-weight: 600;
+}
+
+.param-label-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin-bottom: 4px;
 }
 
