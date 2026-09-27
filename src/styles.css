@@ -145,3 +145,150 @@ select:focus-visible {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.mode-switch {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+
+.mode-switch button[aria-pressed='true'] {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.mode-switch button[aria-pressed='false'] {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.help-toggle {
+  margin-left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.help-card {
+  background: #eff6ff;
+  border-left: 4px solid var(--accent);
+  padding: 8px 10px;
+  margin: 4px 0 8px;
+  font-size: 0.85rem;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.presets button {
+  padding: 2px 10px;
+  font-size: 0.8rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.param-highlighted {
+  outline: 3px solid var(--warn-border);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.formula {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 2px 4px;
+}
+
+.result-row dt {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.result-row dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-highlighted {
+  outline: 3px solid var(--warn-border);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.experiment-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.experiment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progress {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0 0 4px;
+}
+
+.predict-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.option-button[aria-pressed='true'] {
+  outline: 3px solid var(--accent);
+}
+
+.feedback {
+  margin: 6px 0;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.feedback-correct {
+  background: #dcfce7;
+  border-left: 4px solid #16a34a;
+}
+
+.feedback-incorrect {
+  background: #fee2e2;
+  border-left: 4px solid var(--danger);
+}
