@@ -1,3 +1,4 @@
+import { formatNumber } from '../engine/numbers';
 import type { LabContent } from './types';
 
 export const simplePendulumContent: LabContent = {
@@ -57,7 +58,7 @@ export const simplePendulumContent: LabContent = {
   formula: {
     template: 'T = 2π√(L/g)',
     describe: (params, results) =>
-      `T = 2π√(L/g) = 2π√(${params.L}/${params.g}) = ${results.T.toFixed(3).replace('.', ',')} s`,
+      `T = 2π√(L/g) = 2π√(${formatNumber(params.L)}/${formatNumber(params.g)}) = ${formatNumber(results.T, 3)} s`,
   },
   experiments: [
     {
