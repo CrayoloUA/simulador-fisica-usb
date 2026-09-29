@@ -24,6 +24,10 @@ export function ParamControl({ spec, raw, error, help, presets, highlighted, onC
   const id = `param-${spec.key}`;
   const errorId = `${id}-error`;
   const helpId = `${id}-help`;
+  const unitId = `${id}-unit`;
+  // La unidad se asocia al campo de texto como descripción, para que el lector de pantalla
+  // anuncie el valor con su unidad (p. ej. "1,5 … m") y, si aplica, también el error.
+  const describedBy = [spec.unit ? unitId : null, error ? errorId : null].filter(Boolean).join(' ');
 
   return (
     <div className={highlighted ? 'param param-highlighted' : 'param'}>
@@ -57,6 +61,7 @@ export function ParamControl({ spec, raw, error, help, presets, highlighted, onC
           max={spec.max}
           step={spec.step}
           value={sliderValue}
+          aria-valuetext={`${formatNumber(sliderValue)} ${spec.unit}`}
           onChange={(e) => onChange(formatNumber(Number(e.target.value)))}
         />
         <input
@@ -65,15 +70,22 @@ export function ParamControl({ spec, raw, error, help, presets, highlighted, onC
           inputMode="decimal"
           value={raw}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? errorId : undefined}
+          aria-describedby={describedBy || undefined}
           onChange={(e) => onChange(e.target.value)}
         />
-        <span className="unit">{spec.unit}</span>
+        <span id={unitId} className="unit">
+          {spec.unit}
+        </span>
       </div>
       {presets && (
-        <div className="presets">
+        <div className="presets" role="group" aria-label={`Valores predefinidos de ${spec.label}`}>
           {presets.map((preset) => (
-            <button key={preset.label} type="button" onClick={() => onChange(formatNumber(preset.value))}>
+            <button
+              key={preset.label}
+              type="button"
+              aria-label={`${preset.label}: ${formatNumber(preset.value)} ${spec.unit}`}
+              onClick={() => onChange(formatNumber(preset.value))}
+            >
               {preset.label}
             </button>
           ))}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
   advance,
   answerCheck,
@@ -19,6 +19,10 @@ import { SimulationView } from './ui/SimulationView';
 const phenomenon = simplePendulum;
 const content = simplePendulumContent;
 const SPEEDS = [0.25, 0.5, 1, 2];
+const MODES = [
+  { id: 'explorar', label: 'Explorar' },
+  { id: 'experimentos', label: 'Experimentos' },
+] as const;
 
 function initialRaw(): Record<string, string> {
   return Object.fromEntries(phenomenon.paramSchema.map((spec) => [spec.key, formatNumber(spec.defaultValue)]));
@@ -33,6 +37,33 @@ export default function App() {
   const [mode, setMode] = useState<'explorar' | 'experimentos'>('explorar');
   const [experimentId, setExperimentId] = useState<string | null>(null);
   const [flowState, setFlowState] = useState<FlowState | null>(null);
+  const modeRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  const handleModeKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const current = MODES.findIndex((option) => option.id === mode);
+    let next: number;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        next = (current + 1) % MODES.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        next = (current - 1 + MODES.length) % MODES.length;
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = MODES.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    setMode(MODES[next].id);
+    modeRefs.current[next]?.focus();
+  };
 
   const validation = useMemo(() => validateParams(phenomenon.paramSchema, raw), [raw]);
 
@@ -97,13 +128,25 @@ export default function App() {
       <header>
         <h1>Simulador de Fenómenos Físicos</h1>
         <p>{phenomenon.name}</p>
-        <div className="mode-switch">
-          <button type="button" aria-pressed={mode === 'explorar'} onClick={() => setMode('explorar')}>
-            Explorar
-          </button>
-          <button type="button" aria-pressed={mode === 'experimentos'} onClick={() => setMode('experimentos')}>
-            Experimentos
-          </button>
+        {/* Selección única excluyente y reversible: radiogroup, no dos botones con aria-pressed.
+            Aquí las flechas sí eligen (patrón WAI-ARIA de grupo de radio) porque cambiar de modo
+            no es destructivo. */}
+        <div className="mode-switch" role="radiogroup" aria-label="Modo de uso" onKeyDown={handleModeKeyDown}>
+          {MODES.map((option, index) => (
+            <button
+              key={option.id}
+              ref={(element) => {
+                modeRefs.current[index] = element;
+              }}
+              type="button"
+              role="radio"
+              aria-checked={mode === option.id}
+              tabIndex={mode === option.id ? 0 : -1}
+              onClick={() => setMode(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </header>
       <main className="layout">
@@ -114,7 +157,7 @@ export default function App() {
           speed={speed}
           resetToken={resetToken}
         />
-        <aside className="panel">
+        <aside className="panel" aria-label="Panel de control">
           {mode === 'experimentos' && (
             <ExperimentPanel
               content={content}
@@ -141,11 +184,15 @@ export default function App() {
               onChange={(value) => setRaw((prev) => ({ ...prev, [spec.key]: value }))}
             />
           ))}
-          {warnings.map((warning) => (
-            <p key={warning.id} className="banner" role="status">
-              <strong>Aviso:</strong> {warning.result.message}
-            </p>
-          ))}
+          {/* La región de estado existe siempre; los avisos entran y salen de su interior,
+              lo que permite que el lector de pantalla los anuncie. */}
+          <div role="status">
+            {warnings.map((warning) => (
+              <p key={warning.id} className="banner">
+                <strong>Aviso:</strong> {warning.result.message}
+              </p>
+            ))}
+          </div>
           <div className="transport">
             <button type="button" onClick={() => setRunning((r) => !r)}>
               {running ? 'Pausa' : 'Play'}

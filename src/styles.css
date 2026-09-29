@@ -4,10 +4,17 @@
   --text: #0f172a;
   --muted: #475569;
   --border: #cbd5e1;
+  /* Borde de componentes interactivos (campos, opciones, botones secundarios): 4,76:1 sobre
+     blanco y 4,55:1 sobre --bg (WCAG 1.4.11 pide 3:1). --border (1,49:1) queda solo para
+     contenedores decorativos. */
+  --border-strong: #64748b;
   --accent: #2563eb;
   --danger: #b91c1c;
   --warn-bg: #fef3c7;
   --warn-border: #f59e0b;
+  /* Anillo de foco y resaltado guiado: ámbar oscuro, 5,02:1 sobre blanco y 4,80:1 sobre --bg.
+     El #f59e0b anterior daba solo 2,15:1. */
+  --focus: #b45309;
 }
 
 body {
@@ -130,8 +137,36 @@ button {
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid var(--warn-border);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
+}
+
+input[type='text'],
+select {
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+}
+
+button[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Destinos de foco programático (tabindex="-1"): no son controles operables por Tab. */
+.focus-target:focus {
+  outline: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 800px) {
@@ -146,22 +181,23 @@ select:focus-visible {
   margin: 8px 0 0;
 }
 
-.mode-switch button[aria-pressed='true'] {
+.mode-switch button[aria-checked='true'] {
   background: var(--accent);
   color: #ffffff;
 }
 
-.mode-switch button[aria-pressed='false'] {
+.mode-switch button[aria-checked='false'] {
   background: var(--surface);
   color: var(--text);
 }
 
+/* Objetivo mínimo de 24x24 px (WCAG 2.5.8). */
 .help-toggle {
   margin-left: 4px;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--muted);
   font-size: 0.75rem;
@@ -186,15 +222,17 @@ select:focus-visible {
 }
 
 .presets button {
-  padding: 2px 10px;
+  padding: 4px 10px;
+  min-height: 24px;
+  min-width: 24px;
   font-size: 0.8rem;
   background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
 }
 
 .param-highlighted {
-  outline: 3px solid var(--warn-border);
+  outline: 3px solid var(--focus);
   outline-offset: 4px;
   border-radius: 6px;
 }
@@ -214,6 +252,7 @@ select:focus-visible {
 
 .result-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
@@ -233,8 +272,14 @@ select:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+.result-row .help-card {
+  flex: 1 0 100%;
+  box-sizing: border-box;
+  margin: 4px 0 4px;
+}
+
 .result-highlighted {
-  outline: 3px solid var(--warn-border);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -250,19 +295,20 @@ select:focus-visible {
 .secondary {
   background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   text-align: left;
 }
 
 .option-button {
   background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   text-align: left;
 }
 
-.option-button:disabled {
-  opacity: 0.7;
+/* Opciones no elegidas tras responder: siguen legibles (texto atenuado sigue sobre 6:1). */
+.option-button[aria-disabled='true'] {
+  opacity: 0.75;
   cursor: default;
 }
 
@@ -285,8 +331,16 @@ select:focus-visible {
   margin: 8px 0;
 }
 
-.option-button[aria-pressed='true'] {
+.option-button[aria-checked='true'] {
   outline: 3px solid var(--accent);
+  background: #eff6ff;
+  border-color: var(--accent);
+}
+
+/* La opción elegida y enfocada debe distinguirse de la simplemente elegida. */
+.option-button[aria-checked='true']:focus-visible {
+  outline-color: var(--focus);
+  outline-offset: 2px;
 }
 
 .feedback {

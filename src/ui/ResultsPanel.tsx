@@ -39,9 +39,9 @@ export function ResultsPanel({ results, resultHelp, highlightedKey }: Props) {
                 {formatNumber(results[help.resultKey], help.decimals)} {help.unit}
               </dd>
               {openKey === help.resultKey && (
-                <p id={helpId} className="help-card">
+                <dd id={helpId} className="help-card">
                   {help.explanation}
-                </p>
+                </dd>
               )}
             </div>
           );
