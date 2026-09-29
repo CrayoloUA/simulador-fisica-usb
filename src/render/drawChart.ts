@@ -5,6 +5,7 @@ const WINDOW_SECONDS = 10;
 const PAD = { left: 44, right: 12, top: 18, bottom: 24 };
 const COLOR_SIMULATED = '#2563eb';
 const COLOR_THEORY = '#ea580c';
+const MAX_POINTS = 300;
 
 type Mapper = (value: number) => number;
 
@@ -21,12 +22,16 @@ function drawSeries(
   ctx.lineWidth = 2;
   ctx.setLineDash(dashed ? [6, 4] : []);
   ctx.beginPath();
-  samples.forEach((sample, i) => {
+  // Diezma desde el final para conservar siempre la muestra más reciente.
+  const stride = Math.max(1, Math.ceil(samples.length / MAX_POINTS));
+  const first = (samples.length - 1) % stride;
+  for (let i = first; i < samples.length; i += stride) {
+    const sample = samples[i];
     const px = x(sample.t);
     const py = y(pick(sample));
-    if (i === 0) ctx.moveTo(px, py);
+    if (i === first) ctx.moveTo(px, py);
     else ctx.lineTo(px, py);
-  });
+  }
   ctx.stroke();
   ctx.setLineDash([]);
 }

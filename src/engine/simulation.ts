@@ -8,6 +8,11 @@ export interface SimulationOptions {
   maxSamples?: number;
 }
 
+function allFinite(record: Record<string, number>): boolean {
+  for (const key in record) if (!Number.isFinite(record[key])) return false;
+  return true;
+}
+
 export class Simulation {
   readonly phenomenon: Phenomenon;
   readonly params: Params;
@@ -23,6 +28,7 @@ export class Simulation {
   private readonly maxFrameTime: number;
   private readonly sampleEvery: number;
   private readonly maxSamples: number;
+  private readonly deriv: (s: State) => State;
 
   constructor(phenomenon: Phenomenon, params: Params, options: SimulationOptions = {}) {
     this.phenomenon = phenomenon;
@@ -31,6 +37,7 @@ export class Simulation {
     this.maxFrameTime = options.maxFrameTime ?? 0.1;
     this.sampleEvery = options.sampleEvery ?? 2;
     this.maxSamples = options.maxSamples ?? 1000;
+    this.deriv = (s) => phenomenon.derivatives(s, params);
     this.state = phenomenon.initialState(params);
     this.recordSample();
   }
@@ -56,8 +63,8 @@ export class Simulation {
   }
 
   private step(): void {
-    const next = rk4Step((s) => this.phenomenon.derivatives(s, this.params), this.state, this.dt);
-    if (!Object.values(next).every(Number.isFinite)) {
+    const next = rk4Step(this.deriv, this.state, this.dt);
+    if (!allFinite(next)) {
       this.error = 'La simulación se detuvo: el cálculo produjo un valor no válido.';
       return;
     }
@@ -70,7 +77,7 @@ export class Simulation {
   private recordSample(): void {
     const values = this.phenomenon.outputs(this.state, this.params);
     const theory = this.phenomenon.theory(this.params, this.t);
-    if (!Object.values(values).every(Number.isFinite) || !Object.values(theory).every(Number.isFinite)) {
+    if (!allFinite(values) || !allFinite(theory)) {
       this.error = 'La simulación se detuvo: el cálculo produjo un valor no válido.';
       return;
     }
