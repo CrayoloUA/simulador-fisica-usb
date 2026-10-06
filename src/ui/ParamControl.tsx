@@ -1,109 +1,73 @@
-import { useState } from 'react';
-import { formatNumber, parseDecimal } from '../engine/numbers';
-import type { ParamHelp } from '../content/types';
+import type { CSSProperties } from 'react';
+import type { PresetValue } from '../content/types';
 import type { ParamSpec } from '../engine/types';
-
-interface PresetOption {
-  label: string;
-  value: number;
-}
+import { PARAM_NOTES, formatParamValue, paramLabel } from './kidLabels';
 
 interface Props {
   spec: ParamSpec;
-  raw: string;
-  error?: string;
-  help?: ParamHelp;
-  presets?: PresetOption[];
+  value: number;
+  presets?: PresetValue[];
+  /** Un paso del experimento pide mirar este control. */
   highlighted?: boolean;
-  onChange: (raw: string) => void;
+  onChange: (value: number) => void;
 }
 
-export function ParamControl({ spec, raw, error, help, presets, highlighted, onChange }: Props) {
-  const [helpOpen, setHelpOpen] = useState(false);
-  const parsed = parseDecimal(raw);
-  const sliderValue = parsed === null ? spec.defaultValue : Math.min(spec.max, Math.max(spec.min, parsed));
+/**
+ * Un parámetro: etiqueta, deslizador y, a la derecha, su valor con unidad. El deslizador es el
+ * único campo: no deja salir del rango, así que no hay valores inválidos que corregir. El valor
+ * mostrado va oculto para el lector de pantalla porque el deslizador ya lo dice (aria-valuetext).
+ */
+export function ParamControl({ spec, value, presets, highlighted, onChange }: Props) {
+  const { label, symbol } = paramLabel(spec);
+  const text = formatParamValue(spec.key, value);
   const id = `param-${spec.key}`;
-  const errorId = `${id}-error`;
-  const helpId = `${id}-help`;
-  const unitId = `${id}-unit`;
-  // La unidad se asocia al campo de texto como descripción, para que el lector de pantalla
-  // anuncie el valor con su unidad (p. ej. "1,5 … m") y, si aplica, también el error.
-  const describedBy = [spec.unit ? unitId : null, error ? errorId : null].filter(Boolean).join(' ');
+  const note = PARAM_NOTES[spec.key];
+  // Porcentaje recorrido del deslizador: pinta la parte "llena" de la pista.
+  const fill = ((value - spec.min) / (spec.max - spec.min)) * 100;
 
   return (
-    <div className={highlighted ? 'param param-highlighted' : 'param'}>
-      <div className="param-label-row">
-        <label htmlFor={id}>
-          {spec.label} <span className="symbol">{spec.symbol}</span>
-        </label>
-        {help && (
-          <button
-            type="button"
-            className="help-toggle"
-            aria-expanded={helpOpen}
-            aria-controls={helpId}
-            aria-label={`Qué es ${spec.label}`}
-            onClick={() => setHelpOpen((open) => !open)}
-          >
-            ?
-          </button>
-        )}
-      </div>
-      {help?.note && <p className="param-note">{help.note}</p>}
-      {help && helpOpen && (
-        <div id={helpId} className="help-card">
-          <p>
-            <strong>De dónde sale.</strong> {help.origin}
-          </p>
-          <p>
-            <strong>Para qué sirve.</strong> {help.role}
-          </p>
-          <p>
-            <strong>Si la cambias u omites.</strong> {help.effect}
-          </p>
-        </div>
-      )}
-      <div className="param-row">
+    <div className={highlighted ? 'param hl' : 'param'} data-param={spec.key}>
+      <label className="plabel" htmlFor={id}>
+        {label} <span className="sym">({symbol})</span>
+      </label>
+      <div className="prow">
         <input
+          id={id}
           type="range"
-          aria-label={`${spec.label}, control deslizante`}
+          className="range"
+          style={{ '--pct': `${fill}%` } as CSSProperties}
           min={spec.min}
           max={spec.max}
           step={spec.step}
-          value={sliderValue}
-          aria-valuetext={`${formatNumber(sliderValue)} ${spec.unit}`}
-          onChange={(e) => onChange(formatNumber(Number(e.target.value)))}
+          value={value}
+          aria-valuetext={text.spoken}
+          aria-describedby={note ? `${id}-note` : undefined}
+          onChange={(event) => onChange(Number(event.target.value))}
         />
-        <input
-          id={id}
-          type="text"
-          inputMode="decimal"
-          value={raw}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={describedBy || undefined}
-          onChange={(e) => onChange(e.target.value)}
-        />
-        <span id={unitId} className="unit">
-          {spec.unit}
+        <span className="pval" aria-hidden="true">
+          {text.number}
+          <span className="unit">{text.unit}</span>
         </span>
       </div>
       {presets && (
-        <div className="presets" role="group" aria-label={`Valores predefinidos de ${spec.label}`}>
+        <div className="chips" role="group" aria-label={`${label}: valores de algunos planetas`}>
           {presets.map((preset) => (
             <button
               key={preset.label}
               type="button"
-              aria-label={`${preset.label}: ${formatNumber(preset.value)} ${spec.unit}`}
-              onClick={() => onChange(formatNumber(preset.value))}
+              className="chip"
+              aria-pressed={Math.abs(preset.value - value) < 1e-9}
+              aria-label={`${preset.label}: ${formatParamValue(spec.key, preset.value).spoken}`}
+              onClick={() => onChange(preset.value)}
             >
               {preset.label}
             </button>
           ))}
         </div>
       )}
-      {error && (
-        <p id={errorId} className="error" role="alert">
-          {error}
+      {note && (
+        <p id={`${id}-note`} className="note">
+          {note}
         </p>
       )}
     </div>

@@ -1,11 +1,22 @@
 import { DEG_TO_RAD } from '../engine/numbers';
 import type { Sample } from '../engine/types';
+import type { CanvasTheme } from './theme';
 
 const WINDOW_SECONDS = 10;
-const PAD = { left: 44, right: 12, top: 18, bottom: 24 };
-const COLOR_SIMULATED = '#2563eb';
-const COLOR_THEORY = '#ea580c';
+const TICK_SECONDS = 2;
 const MAX_POINTS = 300;
+/** El eje θ llega a este múltiplo del ángulo inicial, redondeado hacia arriba a pasos de 5°. */
+const Y_HEADROOM = 1.12;
+const Y_STEP_DEG = 5;
+/** Por debajo de este ancho la leyenda baja a una segunda fila. */
+const NARROW_PX = 560;
+
+/** Textos del dibujo: los pone la interfaz (lenguaje para niños), el dibujo solo los coloca. */
+export interface ChartLabels {
+  title: string;
+  simulated: string;
+  linear: string;
+}
 
 type Mapper = (value: number) => number;
 
@@ -16,11 +27,13 @@ function drawSeries(
   x: Mapper,
   y: Mapper,
   color: string,
-  dashed: boolean,
+  strokeW: number,
+  dash: number[],
 ): void {
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.setLineDash(dashed ? [6, 4] : []);
+  ctx.lineWidth = strokeW;
+  ctx.lineJoin = 'round';
+  ctx.setLineDash(dash);
   ctx.beginPath();
   // Diezma desde el final para conservar siempre la muestra más reciente.
   const stride = Math.max(1, Math.ceil(samples.length / MAX_POINTS));
@@ -36,56 +49,132 @@ function drawSeries(
   ctx.setLineDash([]);
 }
 
+/** Instantes de las marcas del eje t: múltiplos de 2 s dentro de la ventana visible. */
+export function timeTicks(tStart: number, tEnd: number): number[] {
+  const ticks: number[] = [];
+  for (let t = Math.ceil(tStart / TICK_SECONDS) * TICK_SECONDS; t <= tEnd + 1e-9; t += TICK_SECONDS) ticks.push(t);
+  return ticks;
+}
+
+/** Límite del eje θ en grados: el ángulo inicial más 12 %, hacia arriba a pasos de 5°, mínimo 5°. */
+export function chartYMaxDeg(amplitudeRad: number): number {
+  // El redondeo evita que 10 · 1,12 / 5 con error de coma flotante cambie de escalón.
+  const steps = Math.round(((amplitudeRad / DEG_TO_RAD) * Y_HEADROOM * 1e6) / Y_STEP_DEG) / 1e6;
+  return Math.max(Y_STEP_DEG, Math.ceil(steps) * Y_STEP_DEG);
+}
+
+/**
+ * Dibuja θ(t) en el rectángulo `width` × `height` (px CSS; quien llama aplica la escala del
+ * dispositivo). La simulada (sólida, azul) va primero y la curva de comparación (punteada, naranja)
+ * encima, para que ambas se vean cuando coinciden. Un punto marca el instante actual.
+ */
 export function drawChart(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
   samples: Sample[],
   amplitudeRad: number,
-  options: { showLinear?: boolean } = {},
+  theme: CanvasTheme,
+  options: { showLinear?: boolean; labels: ChartLabels },
 ): void {
-  const showLinear = options.showLinear ?? true;
+  const { showLinear = false, labels } = options;
   ctx.clearRect(0, 0, width, height);
   if (samples.length === 0) return;
 
-  const plotW = width - PAD.left - PAD.right;
-  const plotH = height - PAD.top - PAD.bottom;
+  const { s1, s2, s4, s5, s6, s7 } = theme.space;
+  const f = theme.textSize;
+  const regular = `400 ${f}px ${theme.fontSans}`;
+  const semibold = `600 ${f}px ${theme.fontSans}`;
+  const narrow = width < NARROW_PX;
+  // En un ancho estrecho la leyenda ocupa una fila propia bajo el título.
+  const pad = { left: s7 + s2, right: s4, top: s6 + s2 + (showLinear && narrow ? s5 : 0), bottom: s6 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+
+  const yMaxDeg = chartYMaxDeg(amplitudeRad);
+  const yMax = yMaxDeg * DEG_TO_RAD;
   const tEnd = Math.max(WINDOW_SECONDS, samples[samples.length - 1].t);
   const tStart = tEnd - WINDOW_SECONDS;
-  const yMax = amplitudeRad * 1.15;
-  const x: Mapper = (t) => PAD.left + ((t - tStart) / WINDOW_SECONDS) * plotW;
-  const y: Mapper = (v) => PAD.top + plotH / 2 - (v / yMax) * (plotH / 2);
+  const x: Mapper = (t) => pad.left + ((t - tStart) / WINDOW_SECONDS) * plotW;
+  const y: Mapper = (v) => pad.top + plotH / 2 - (v / yMax) * (plotH / 2);
 
-  ctx.strokeStyle = '#cbd5e1';
-  ctx.lineWidth = 1;
+  // Marcas de tiempo: cuadrícula suave y número bajo cada una (la unidad va en el título).
+  ctx.font = regular;
+  ctx.textAlign = 'center';
+  ctx.lineWidth = theme.stroke.hair;
+  for (const tick of timeTicks(tStart, tEnd)) {
+    ctx.strokeStyle = theme.line;
+    ctx.beginPath();
+    ctx.moveTo(x(tick), pad.top);
+    ctx.lineTo(x(tick), height - pad.bottom);
+    ctx.stroke();
+    ctx.fillStyle = theme.inkSoft;
+    ctx.fillText(String(Math.round(tick)), x(tick), height - s2);
+  }
+
+  // Ejes: θ = 0 horizontal y escala de θ vertical.
+  ctx.strokeStyle = theme.lineStrong;
+  ctx.lineWidth = theme.stroke.hair;
   ctx.beginPath();
-  ctx.moveTo(PAD.left, y(0));
-  ctx.lineTo(width - PAD.right, y(0));
-  ctx.moveTo(PAD.left, PAD.top);
-  ctx.lineTo(PAD.left, height - PAD.bottom);
+  ctx.moveTo(pad.left, y(0));
+  ctx.lineTo(width - pad.right, y(0));
+  ctx.moveTo(pad.left, pad.top);
+  ctx.lineTo(pad.left, height - pad.bottom);
   ctx.stroke();
 
-  ctx.fillStyle = '#475569';
-  ctx.font = '11px system-ui, sans-serif';
-  const yLabel = (yMax / DEG_TO_RAD).toFixed(0);
+  // Título y escala de θ. Positivo = a la derecha de la vertical de reposo; negativo = a la izquierda.
+  ctx.fillStyle = theme.ink;
+  ctx.font = semibold;
+  ctx.textAlign = 'left';
+  ctx.fillText(labels.title, s4, s5 - s1);
+  ctx.fillStyle = theme.inkSoft;
+  ctx.font = regular;
   ctx.textAlign = 'right';
-  // Positivo = a la derecha de la vertical de reposo; negativo = a la izquierda.
-  ctx.fillText(`+${yLabel}°`, PAD.left - 6, PAD.top + 4);
-  ctx.fillText(`-${yLabel}°`, PAD.left - 6, height - PAD.bottom);
-  ctx.textAlign = 'left';
-  ctx.fillText('θ = 0 (vertical)', PAD.left + 4, y(0) - 4);
-  ctx.textAlign = 'center';
-  ctx.fillText(`θ(t)   t: ${tStart.toFixed(0)} a ${tEnd.toFixed(0)} s`, PAD.left + plotW / 2, height - 6);
+  ctx.fillText(`+${yMaxDeg}°`, pad.left - s2, pad.top + s1);
+  ctx.fillText('0°', pad.left - s2, y(0) + s1);
+  ctx.fillText(`−${yMaxDeg}°`, pad.left - s2, height - pad.bottom);
 
-  // La simulada va primero y la aproximación lineal (punteada) encima, para que ambas se vean cuando coinciden.
-  drawSeries(ctx, samples, (s) => s.values.theta, x, y, COLOR_SIMULATED, false);
-  if (showLinear) drawSeries(ctx, samples, (s) => s.theory.theta, x, y, COLOR_THEORY, true);
-
-  ctx.textAlign = 'left';
-  ctx.fillStyle = COLOR_SIMULATED;
-  ctx.fillText('Simulada', PAD.left + 8, 12);
+  // Las curvas y el punto se recortan a la zona de la gráfica.
+  const last = samples[samples.length - 1];
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pad.left, pad.top, plotW, plotH);
+  ctx.clip();
+  drawSeries(ctx, samples, (s) => s.values.theta, x, y, theme.curveSim, theme.stroke.curve, []);
   if (showLinear) {
-    ctx.fillStyle = COLOR_THEORY;
-    ctx.fillText('Aprox. lineal', PAD.left + 78, 12);
+    drawSeries(ctx, samples, (s) => s.theory.theta, x, y, theme.curveLinear, theme.stroke.curveLinear, theme.dashLong);
+  }
+  ctx.fillStyle = theme.curveSim;
+  ctx.strokeStyle = theme.surface;
+  ctx.lineWidth = theme.stroke.bold;
+  ctx.beginPath();
+  ctx.arc(x(last.t), y(last.values.theta), theme.dotRadius, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // Leyenda (solo al comparar): muestra del trazo, sólido o punteado, y nombre.
+  if (showLinear) {
+    const swatch = s6 + s1;
+    const entry = (originX: number, rowY: number, label: string, color: string, strokeW: number, dash: number[]) => {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = strokeW;
+      ctx.setLineDash(dash);
+      ctx.beginPath();
+      ctx.moveTo(originX, rowY - s1);
+      ctx.lineTo(originX + swatch, rowY - s1);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = theme.inkSoft;
+      ctx.textAlign = 'left';
+      ctx.fillText(label, originX + swatch + s2, rowY);
+    };
+    ctx.font = regular;
+    const simWidth = swatch + s2 + ctx.measureText(labels.simulated).width;
+    const linWidth = swatch + s2 + ctx.measureText(labels.linear).width;
+    const rowY = narrow ? s6 + s2 + s1 : s5 - s1;
+    const originX = narrow ? s4 : width - pad.right - simWidth - s5 - linWidth;
+    entry(originX, rowY, labels.simulated, theme.curveSim, theme.stroke.curve, []);
+    entry(originX + simWidth + s5, rowY, labels.linear, theme.curveLinear, theme.stroke.curveLinear, theme.dashLong);
   }
 }
