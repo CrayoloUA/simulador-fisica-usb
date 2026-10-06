@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup v2 · Dirección A: acordeones bajo la gráfica</title>
+<style>
+  :root { --bg:#f8fafc; --surface:#fff; --text:#0f172a; --muted:#475569; --border:#cbd5e1; --border-strong:#64748b; --accent:#2563eb; --danger:#b91c1c; --warn-bg:#fef3c7; --warn-border:#f59e0b; --focus:#b45309; --info:#eff6ff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif}
+  .app{max-width:1100px;margin:0 auto;padding:16px}
+  h1{font-size:1.25rem;margin:0}
+  header p{margin:2px 0 0;color:var(--muted)}
+  .nota{background:#f1f5f9;border:1px dashed var(--border-strong);padding:8px 12px;border-radius:8px;font-size:.8rem;color:var(--muted);margin:12px 0}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;margin-top:12px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px}
+  .card h2{font-size:.95rem;margin:0 0 8px}
+  button{font:inherit;font-size:.85rem;padding:6px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+  button.sec{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+  button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+  .seg{display:inline-flex;border:1px solid var(--border-strong);border-radius:6px;overflow:hidden}
+  .seg button{border:0;border-radius:0;background:var(--surface);color:var(--text)}
+  .seg button[aria-pressed=true]{background:var(--accent);color:#fff}
+  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .transport{display:flex;gap:8px;margin-top:8px;align-items:center}
+  .banner{background:var(--warn-bg);border-left:4px solid var(--warn-border);padding:8px 10px;border-radius:6px;font-size:.85rem;margin:8px 0}
+  .info{background:var(--info);border-left:4px solid var(--accent);padding:8px 10px;border-radius:6px;font-size:.85rem;margin:8px 0}
+  .err{color:var(--danger);font-size:.8rem;margin:2px 0}
+  .ctrl{margin-bottom:12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:2px}
+  .ctrl input[type=range]{width:100%}
+  .ctrl input[type=text]{width:72px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:6px}
+  .ctrl input.bad{border-color:var(--danger);border-width:2px}
+  .q{width:20px;height:20px;border-radius:50%;padding:0;background:var(--surface);color:var(--muted);border:1px solid var(--border-strong);font-size:.7rem}
+  details{border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:8px}
+  summary{cursor:pointer;padding:10px 12px;font-weight:600;font-size:.9rem}
+  details .body{padding:0 12px 12px;font-size:.85rem}
+  .eq{font-family:Cambria,Georgia,serif;font-size:1rem;background:#f1f5f9;padding:6px 10px;border-radius:6px;margin:6px 0}
+  table{border-collapse:collapse;font-size:.8rem;width:100%}
+  td,th{border-bottom:1px solid var(--border);padding:4px 6px;text-align:left;vertical-align:top}
+  .legend{display:flex;gap:16px;font-size:.8rem;margin:4px 0 0;color:var(--muted)}
+  .sw{display:inline-block;width:22px;height:0;border-top:3px solid var(--accent);vertical-align:middle;margin-right:4px}
+  .sw.d{border-top:3px dashed #b45309}
+  .res{display:flex;justify-content:space-between;font-size:.85rem;padding:3px 0;border-bottom:1px solid var(--border)}
+  @media (max-width:800px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>Laboratorio MAS · Péndulo simple</h1>
+  <p>Mockup v2 — Dirección A: todo lo teórico en acordeones debajo de la gráfica. Interactivo solo para revisar (modo y botón de linealización).</p>
+</header>
+<div class="nota"><b>Dirección A.</b> Cambia lo mínimo del layout actual (simulación y gráfica a la izquierda, controles a la derecha). Lo nuevo vive en 4 acordeones: "Ecuaciones del modelo", "De dónde sale esta gráfica", "Ejes y signos" y "Para qué sirve cada parámetro". Ventaja: la pantalla sigue limpia. Riesgo: lo que el profesor pidió explicar queda un clic más lejos.</div>
+
+<div class="row" style="margin-top:12px">
+  <span id="lblmodo" style="font-weight:600">Modelo:</span>
+  <div class="seg" role="group" aria-labelledby="lblmodo">
+    <button id="bLin" aria-pressed="false">Lineal (θ pequeño)</button>
+    <button id="bNo" aria-pressed="true">No lineal (real)</button>
+  </div>
+  <span style="color:var(--muted);font-size:.8rem" id="rango">Ángulo inicial hasta 60°</span>
+</div>
+
+<div class="layout">
+  <div>
+    <section class="card" aria-label="Simulación">
+      <svg viewBox="0 0 640 170" width="100%" role="img" aria-label="Péndulo con eje vertical de referencia y sentido positivo a la derecha" style="background:#fff">
+        <line x1="320" y1="10" x2="320" y2="160" stroke="#94a3b8" stroke-dasharray="4 4"/>
+        <text x="326" y="22" font-size="11" fill="#475569">θ = 0 (reposo)</text>
+        <circle cx="320" cy="10" r="4" fill="#0f172a"/>
+        <line x1="320" y1="10" x2="450" y2="120" stroke="#0f172a" stroke-width="2"/>
+        <circle cx="450" cy="120" r="14" fill="#2563eb"/>
+        <path d="M320 70 A60 60 0 0 1 366 58" fill="none" stroke="#b45309" stroke-width="2"/>
+        <text x="372" y="62" font-size="11" fill="#b45309">θ &gt; 0 → derecha</text>
+        <text x="190" y="62" font-size="11" fill="#b45309">← θ &lt; 0 izquierda</text>
+      </svg>
+      <div class="transport">
+        <button>▶ Reproducir</button><button class="sec">Reiniciar</button>
+        <label style="font-size:.85rem;margin-left:8px">Velocidad <select><option>1×</option><option>0,5×</option></select></label>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:12px" aria-label="Gráfica θ(t)">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">θ(t) — ángulo en función del tiempo</h2>
+        <button id="bTog" class="sec" aria-pressed="true">Ocultar aproximación lineal</button>
+      </div>
+      <svg id="chart" viewBox="0 0 640 220" width="100%" role="img" aria-label="Gráfica del ángulo en función del tiempo: simulada y aproximación lineal"></svg>
+      <div class="legend"><span><i class="sw"></i>Simulada (integración numérica)</span><span id="legD"><i class="sw d"></i>Aprox. lineal (solución analítica)</span></div>
+      <div class="banner" role="status" id="div">Con φ₀ = 40° el período real es 3,2 % mayor que T₀: por eso las curvas se separan desde el primer ciclo. sen θ ≈ θ solo vale para ángulos muy pequeños (menos de 10°).</div>
+    </section>
+
+    <details open>
+      <summary>Ecuaciones del modelo (No lineal)</summary>
+      <div class="body">
+        <div class="eq">θ'' + (g/L)·sen θ + b·θ' = 0</div>
+        <div class="eq">T = T₀ · 2K(k)/π, k = sen(φ₀/2), T₀ = 2π√(L/g)</div>
+        <p>Con ángulos pequeños, sen θ ≈ θ y queda θ(t) = A·cos(ω₀t + φ), ω₀ = √(g/L). La masa no aparece: m·g·sen θ = m·L·θ'' se cancela.</p>
+      </div>
+    </details>
+    <details>
+      <summary>De dónde sale esta gráfica</summary>
+      <div class="body"><p><b>Azul:</b> el programa resuelve la ecuación diferencial paso a paso (método RK4) y dibuja cada valor calculado. No es una fórmula escrita a mano ni una captura del dibujo.</p><p><b>Punteada:</b> sí es una fórmula: la solución analítica de la ecuación ya linealizada.</p></div>
+    </details>
+    <details>
+      <summary>Ejes y signos</summary>
+      <div class="body"><p>El eje de referencia es la vertical por el punto de apoyo (θ = 0). El ángulo es positivo hacia la derecha y negativo hacia la izquierda; por eso θ(t) toma valores positivos y negativos del mismo tamaño.</p></div>
+    </details>
+    <details>
+      <summary>Para qué sirve cada parámetro</summary>
+      <div class="body">
+        <table><tr><th>Parámetro</th><th>De dónde sale</th><th>Para qué sirve</th><th>Si lo cambias u omites</th></tr>
+        <tr><td>L</td><td>Longitud medida del hilo</td><td>Fija T₀ = 2π√(L/g)</td><td>L×4 ⇒ T×2</td></tr>
+        <tr><td>φ₀</td><td>Ángulo de lanzamiento</td><td>Amplitud inicial</td><td>En modo lineal no cambia T; en no lineal sí</td></tr>
+        <tr><td>g</td><td>Gravedad del lugar</td><td>Fuerza restauradora</td><td>Menos g ⇒ mayor T</td></tr>
+        <tr><td>m</td><td>Masa de la bolita</td><td>Solo la energía</td><td>No cambia θ(t) ni T</td></tr>
+        <tr><td>b</td><td>Fricción del aire</td><td>Amortigua la amplitud</td><td>b = 0: sin pérdida</td></tr></table>
+      </div>
+    </details>
+  </div>
+
+  <aside class="card" aria-label="Parámetros">
+    <h2>Parámetros</h2>
+    <div class="ctrl"><label>Longitud L <span class="row"><input type="text" value="1,0"> m <button class="q" aria-label="Ayuda sobre longitud">?</button></span></label><input type="range"></div>
+    <div class="ctrl"><label>Ángulo inicial φ₀ <span class="row"><input type="text" value="40"> ° <button class="q" aria-label="Ayuda">?</button></span></label><input type="range"></div>
+    <div class="ctrl"><label>Gravedad g <span class="row"><input type="text" value="9,8"> m/s² <button class="q" aria-label="Ayuda">?</button></span></label><input type="range"></div>
+    <div class="ctrl"><label>Masa m <span class="row"><input type="text" value="0,5"> kg <button class="q" aria-label="Ayuda">?</button></span></label><input type="range">
+      <div class="info">La masa se cancela: puedes poner 0,05 kg o 5 kg y θ(t) y T no cambian. Solo cambia la energía.</div></div>
+    <div class="ctrl"><label>Fricción del aire b <span class="row"><input type="text" value="0,0"> 1/s <button class="q" aria-label="Ayuda">?</button></span></label><input type="range"></div>
+    <div class="ctrl"><label>Estado de error (ejemplo) <span><input type="text" value="9x" class="bad" aria-invalid="true"></span></label><div class="err" role="alert">Escribe un número entre 0 y 0,4 (1/s).</div></div>
+    <h2>Resultados</h2>
+    <div class="res"><span>Período real T</span><b>2,075 s</b></div>
+    <div class="res"><span>Período T₀ (θ pequeño)</span><b>2,007 s</b></div>
+    <div class="res"><span>Error (T − T₀)/T₀</span><b>3,4 %</b></div>
+    <div class="res"><span>Energía</span><b>0,41 J</b></div>
+  </aside>
+</div>
+</div>
+<script>
+const W=640,H=220,P=34;let nonlin=true,showLin=true;
+function path(f){let d='';for(let i=0;i<=300;i++){const t=i/300*10;const y=f(t);d+=(i?'L':'M')+(P+(W-P-8)*t/10).toFixed(1)+' '+(H/2-y*(H/2-20)/45).toFixed(1)}return d}
+function draw(){const w0=Math.sqrt(9.8),A=40,k=nonlin?1/1.0316:1;
+ const lin=t=>A*Math.cos(w0*t);const sim=t=>A*Math.cos(w0*k*t);
+ let s=`<line x1="${P}" y1="${H/2}" x2="${W-8}" y2="${H/2}" stroke="#94a3b8"/><text x="${P+4}" y="${H/2-4}" font-size="10" fill="#475569">θ = 0 (vertical)</text><text x="4" y="24" font-size="10" fill="#475569">+40°</text><text x="4" y="${H-14}" font-size="10" fill="#475569">−40°</text><text x="${W-90}" y="${H-4}" font-size="10" fill="#475569">t (s)</text>`;
+ s+=`<path d="${path(sim)}" fill="none" stroke="#2563eb" stroke-width="2.2"/>`;
+ if(showLin)s+=`<path d="${path(lin)}" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 5"/>`;
+ document.getElementById('chart').innerHTML=s;document.getElementById('legD').style.display=showLin?'':'none'}
+const bL=document.getElementById('bLin'),bN=document.getElementById('bNo'),bT=document.getElementById('bTog');
+function mode(n){nonlin=n;bL.setAttribute('aria-pressed',!n);bN.setAttribute('aria-pressed',n);document.getElementById('rango').textContent=n?'Ángulo inicial hasta 60°':'Ángulo inicial hasta 15°';document.getElementById('div').style.display=n?'':'none';draw()}
+bL.onclick=()=>mode(false);bN.onclick=()=>mode(true);
+bT.onclick=()=>{showLin=!showLin;bT.setAttribute('aria-pressed',showLin);bT.textContent=showLin?'Ocultar aproximación lineal':'Mostrar aproximación lineal';draw()};
+draw();
+</script>
+</body>
+</html>

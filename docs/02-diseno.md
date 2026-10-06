@@ -30,6 +30,22 @@ Archivo: `docs/mockups/experimento-panel.html` (HTML/CSS autocontenido, sin Java
 start docs/mockups/experimento-panel.html
 ```
 
+## Iteración 2 (2026-10-05): pantalla con modos, linealización, fricción y teoría
+
+Insumo: HU-11 a HU-19 de `docs/01-prd.md`. Se hicieron tres direcciones reales (HTML autocontenido, mismos tokens de `DESIGN.md`, con el selector de modo y el botón de linealización funcionando en el navegador):
+
+| Dirección | Archivo | Idea | Riesgo |
+|---|---|---|---|
+| A. Acordeones | `docs/mockups/v2-A-acordeones.html` | Layout actual sin cambios; teoría en 4 acordeones bajo la gráfica | Lo que el profesor pidió explicar queda a un clic |
+| B. Pestañas | `docs/mockups/v2-B-pestanas.html` | Parámetros en una fila, animación y gráfica lado a lado, teoría en pestañas | Cambio de layout mayor |
+| C. Teoría lateral | `docs/mockups/v2-C-teoria-lateral.html` | 3 columnas; panel de teoría siempre visible que cambia con el modo; ayuda de cada parámetro con "de dónde sale / para qué sirve / si lo cambias" | Pantalla densa en celular |
+
+Elementos comunes a las tres: selector de modo Lineal/No lineal con su rango de ángulo, botón "Ocultar/Mostrar aproximación lineal" con `aria-pressed`, eje θ = 0 rotulado en el dibujo y en la gráfica con "+ derecha / − izquierda", leyenda "Simulada (integración numérica)" y "Aprox. lineal (solución analítica)", aviso de divergencia, aviso de que la masa se cancela, control de fricción b con mensaje de error, y estado de error de campo.
+
+Estados cubiertos: normal, error de campo (ejemplo en A y C), aviso de divergencia visible y oculto (según el modo), curva punteada visible/oculta. No hay estados de "vacío" ni "cargando": la app corre en el cliente y arranca con valores por defecto.
+
+**Dirección elegida por el usuario: C (teoría lateral).** Mockup móvil con marco de teléfono: `docs/mockups/v2-C-movil.html` (375 px, objetivos táctiles de 44 px, teoría como acordeones bajo la gráfica, tres estados: No lineal con punteada visible, Lineal con punteada oculta, error de fricción con aviso de ajuste de φ₀ al cambiar de modo). Esta dirección es la fuente de verdad: no se cambia en construcción sin volver a preguntar.
+
 ## Decisión pendiente de aprobación
 
 Antes de implementar `ExperimentPanel` (retomando el plan de la capa pedagógica), se necesita que el usuario apruebe o pida cambios sobre este mockup — layout, colores de retroalimentación, o el copy de las tarjetas. Mientras no haya respuesta, no se avanza a construir el componente real (regla del propio playbook: "itera hasta que Julián diga que sí").

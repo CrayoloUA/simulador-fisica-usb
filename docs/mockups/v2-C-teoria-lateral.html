@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup v2 · Dirección C: teoría siempre visible</title>
+<style>
+  :root { --bg:#f8fafc; --surface:#fff; --text:#0f172a; --muted:#475569; --border:#cbd5e1; --border-strong:#64748b; --accent:#2563eb; --danger:#b91c1c; --warn-bg:#fef3c7; --warn-border:#f59e0b; --focus:#b45309; --info:#eff6ff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif}
+  .app{max-width:1280px;margin:0 auto;padding:16px}
+  h1{font-size:1.25rem;margin:0}
+  header p{margin:2px 0 0;color:var(--muted)}
+  .nota{background:#f1f5f9;border:1px dashed var(--border-strong);padding:8px 12px;border-radius:8px;font-size:.8rem;color:var(--muted);margin:12px 0}
+  .layout{display:grid;grid-template-columns:260px minmax(0,1fr) 320px;gap:12px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px}
+  .card h2{font-size:.95rem;margin:0 0 8px}
+  button{font:inherit;font-size:.85rem;padding:6px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+  button.sec{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+  button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+  .seg{display:flex;border:1px solid var(--border-strong);border-radius:6px;overflow:hidden}
+  .seg button{flex:1;border:0;border-radius:0;background:var(--surface);color:var(--text)}
+  .seg button[aria-pressed=true]{background:var(--accent);color:#fff}
+  .ctrl{margin-bottom:10px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem}
+  .ctrl input[type=text]{width:60px;padding:3px 6px;border:1px solid var(--border-strong);border-radius:6px}
+  .q{width:20px;height:20px;border-radius:50%;padding:0;background:var(--surface);color:var(--muted);border:1px solid var(--border-strong);font-size:.7rem}
+  .pop{background:var(--info);border-left:4px solid var(--accent);border-radius:6px;padding:8px 10px;font-size:.8rem;margin:6px 0}
+  .pop b{display:block;margin-top:4px}
+  .banner{background:var(--warn-bg);border-left:4px solid var(--warn-border);padding:8px 10px;border-radius:6px;font-size:.8rem}
+  .eq{font-family:Cambria,Georgia,serif;font-size:.95rem;background:#f1f5f9;padding:6px 10px;border-radius:6px;margin:6px 0}
+  .legend{display:flex;gap:14px;font-size:.8rem;color:var(--muted)}
+  .sw{display:inline-block;width:22px;border-top:3px solid var(--accent);vertical-align:middle;margin-right:4px}
+  .sw.d{border-top:3px dashed #b45309}
+  .row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .theory h3{font-size:.85rem;margin:10px 0 4px}
+  .theory p{font-size:.8rem;margin:4px 0}
+  .err{color:var(--danger);font-size:.75rem}
+  @media (max-width:1000px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>Laboratorio MAS · Péndulo simple</h1><p>Mockup v2 — Dirección C: tres columnas; la teoría del modelo activo siempre a la vista.</p></header>
+<div class="nota"><b>Dirección C.</b> Controles a la izquierda, simulación y gráfica al centro, y un panel "Teoría del modelo" fijo a la derecha que cambia con el modo (ecuaciones, origen de la gráfica, signos, error). Cada "?" abre una tarjeta con las 3 respuestas que pidió el profesor: de dónde sale, para qué sirve y qué pasa si lo cambias u omites. Ventaja: nada queda escondido, ideal para sustentar. Riesgo: pantalla densa; en celular pasa a una sola columna larga.</div>
+
+<div class="layout">
+  <div>
+    <section class="card" aria-label="Modelo y parámetros">
+      <h2>Modelo</h2>
+      <div class="seg" role="group" aria-label="Modelo"><button aria-pressed="false">Lineal</button><button aria-pressed="true">No lineal</button></div>
+      <p style="font-size:.75rem;color:var(--muted)">Ángulo inicial hasta 60°</p>
+      <h2 style="margin-top:12px">Parámetros</h2>
+      <div class="ctrl"><label>L (m) <span><input type="text" value="1,0"> <button class="q" aria-label="Ayuda L">?</button></span></label></div>
+      <div class="ctrl"><label>φ₀ (°) <span><input type="text" value="40"> <button class="q" aria-label="Ayuda">?</button></span></label></div>
+      <div class="ctrl"><label>g (m/s²) <span><input type="text" value="9,8"> <button class="q" aria-label="Ayuda">?</button></span></label></div>
+      <div class="ctrl"><label>m (kg) <span><input type="text" value="0,5"> <button class="q" aria-label="Ayuda masa" aria-expanded="true">?</button></span></label>
+        <div class="pop"><b>De dónde sale</b>Se mide con una balanza (kg).<b>Para qué sirve</b>Solo entra en la energía de la bolita.<b>Si la cambias u omites</b>θ(t) y T no cambian: m se cancela en m·g·sen θ = m·L·θ''.</div></div>
+      <div class="ctrl"><label>b (1/s) <span><input type="text" value="0,0"> <button class="q" aria-label="Ayuda">?</button></span></label><div class="err">Máximo 0,4 (con más, el péndulo ya no oscila).</div></div>
+      <div class="row"><button>▶ Reproducir</button><button class="sec">Reiniciar</button></div>
+    </section>
+  </div>
+
+  <div>
+    <section class="card" aria-label="Simulación">
+      <svg viewBox="0 0 600 150" width="100%" role="img" aria-label="Péndulo con eje vertical y sentido positivo a la derecha">
+        <line x1="300" y1="8" x2="300" y2="145" stroke="#94a3b8" stroke-dasharray="4 4"/><text x="306" y="20" font-size="10" fill="#475569">θ = 0</text>
+        <line x1="300" y1="8" x2="410" y2="105" stroke="#0f172a" stroke-width="2"/><circle cx="410" cy="105" r="13" fill="#2563eb"/>
+        <text x="340" y="50" font-size="10" fill="#b45309">+ derecha →</text><text x="190" y="50" font-size="10" fill="#b45309">← − izquierda</text>
+      </svg>
+    </section>
+    <section class="card" aria-label="Gráfica">
+      <div class="row"><h2 style="margin:0">θ(t)</h2><button class="sec" aria-pressed="true">Ocultar aprox. lineal</button></div>
+      <svg viewBox="0 0 600 200" width="100%" role="img" aria-label="Gráfica θ(t)">
+        <line x1="30" y1="100" x2="592" y2="100" stroke="#94a3b8"/><text x="34" y="96" font-size="9" fill="#475569">θ = 0</text>
+        <path d="M30 30 C100 30 120 170 190 170 S280 30 350 30 S440 170 510 170 S580 30 592 30" fill="none" stroke="#2563eb" stroke-width="2.2"/>
+        <path d="M30 30 C95 30 112 170 177 170 S259 30 324 30 S406 170 471 170 S553 30 592 40" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 5"/>
+      </svg>
+      <div class="legend"><span><i class="sw"></i>Simulada</span><span><i class="sw d"></i>Aprox. lineal</span></div>
+      <div class="banner" role="status" style="margin-top:8px">Las curvas se separan desde el primer ciclo: con φ₀ = 40°, T es 3,2 % mayor que T₀.</div>
+    </section>
+  </div>
+
+  <aside class="card theory" aria-label="Teoría del modelo">
+    <h2>Teoría · modelo No lineal</h2>
+    <div class="eq">θ'' + (g/L)·sen θ + b·θ' = 0</div>
+    <div class="eq">T = T₀·2K(k)/π, k = sen(φ₀/2)</div>
+    <h3>De dónde sale la gráfica</h3>
+    <p><b>Azul:</b> integración numérica (RK4) de la ecuación. <b>Punteada:</b> solución analítica lineal A·cos(ω₀t + φ). No es una captura del dibujo.</p>
+    <h3>Por qué θ es + y −</h3>
+    <p>Hay un eje vertical de referencia (θ = 0): derecha es positivo, izquierda negativo.</p>
+    <h3>Cuándo vale la lineal</h3>
+    <p>Solo si sen θ ≈ θ: menos de 10°, idealmente tendiendo a 0.</p>
+    <h3>Resultados</h3>
+    <p>T = 2,075 s · T₀ = 2,007 s · error = 3,4 %</p>
+  </aside>
+</div>
+</div>
+</body>
+</html>

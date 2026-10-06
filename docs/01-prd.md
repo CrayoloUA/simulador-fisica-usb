@@ -95,3 +95,100 @@ Reutilizado de la sección 2 del diseño (tabla Debe/Debería/Podría/Fuera de a
 | Fecha del PMV sin confirmar | Medio — no se puede planear con precisión | Confirmar con el coordinador del curso |
 | Capa pedagógica diseñada pero no implementada | Medio | Plan de implementación pendiente de retomar |
 | Sin CI ni pruebas E2E | Bajo por ahora (proyecto pequeño, 2 personas) | Ver brechas 2 y 6 de `docs/A-auditoria.md` |
+
+---
+
+# Iteración 2 (2026-10-05): correcciones del profesor Brian al péndulo simple
+
+- **Fuente:** revisión del profesor (transcripción), registrada en B-055. Decisiones del usuario en Fase 0 y Fase 1: dos modos con selector en pantalla; modo lineal hasta 15° y no lineal hasta 60°; masa se mantiene como control y se explica; fricción viscosa −b·ω con b = 0 por defecto; fecha objetivo: esta semana.
+- **Alcance:** solo el laboratorio MAS (péndulo simple). El péndulo compuesto (spec del 2026-09-29) queda fuera de esta iteración y no se toca.
+
+## Terminología fijada (para la sustentación)
+
+| Término | Significado en el proyecto |
+|---|---|
+| Curva azul (Simulada) | Integración numérica (RK4) de la ecuación diferencial del modo activo. NO es la solución analítica ni una captura "píxel por píxel" del dibujo: se calcula con la ecuación y luego se dibuja |
+| Curva punteada (Aprox. lineal) | Solución analítica de la ecuación linealizada (sen θ ≈ θ): θ(t) = A·cos(ω₀t + φ) y, con fricción, su versión amortiguada |
+| Signo del ángulo | Eje vertical de referencia (θ = 0, colgando en reposo). θ > 0 hacia la derecha, θ < 0 hacia la izquierda. Un mismo valor absoluto aparece con ambos signos en las dos mitades de la oscilación |
+
+## Historias de usuario nuevas
+
+**HU-11 — Elegir el modo de simulación**
+Como estudiante, quiero elegir entre "Lineal" y "No lineal" en la misma pantalla, para comparar el péndulo de ángulo pequeño con el real.
+- Dado el modo Lineal, entonces la simulación integra θ'' = −(g/L)·θ y el ángulo inicial máximo es 15°.
+- Dado el modo No lineal, entonces integra θ'' = −(g/L)·sen θ y el ángulo inicial máximo es 60°.
+- Dado que cambio de modo, entonces la simulación se reinicia y, si el ángulo supera el máximo del nuevo modo, se ajusta al máximo y se me avisa.
+- Cada modo muestra sus propias ecuaciones y la explicación de cuándo es válido.
+
+**HU-12 — Ver la masa sin efecto**
+Como estudiante, quiero comprobar que cambiar la masa no cambia el movimiento, para entender que la masa se cancela.
+- Dado dos masas distintas con los mismos L, g y φ₀, entonces θ(t), el período T y la frecuencia son idénticos (prueba automática, tolerancia 1×10⁻¹²).
+- La energía sí escala con m y se indica así en su ayuda.
+- Una ayuda junto al control de masa muestra la cancelación: m·g·sen θ = m·L·θ'' ⇒ θ'' = −(g/L)·sen θ.
+
+**HU-13 — Mostrar u ocultar la linealización**
+Como estudiante, quiero un botón que muestre u oculte la curva punteada, para comparar visualmente.
+- Dado el botón, cuando lo uso, entonces la curva punteada aparece o desaparece sin reiniciar la simulación ni perder datos.
+- El estado se anuncia a lectores de pantalla (aria-pressed) y se opera con teclado.
+- Por defecto, la curva punteada está visible.
+
+**HU-14 — Entender por qué divergen las curvas**
+Como estudiante, quiero una explicación y una medida de la separación entre curvas, para entender el error de la aproximación lineal.
+- Dado el modo No lineal, entonces veo el error relativo del período (T − T₀)/T₀ y un texto que explica que sen θ ≈ θ solo vale para ángulos pequeños (< 10°, idealmente tendiendo a 0) y que la diferencia crece con φ₀.
+- Dado que φ₀ ≤ 10°, el aviso indica que la separación es despreciable; dado φ₀ > 10°, indica cuánto se separa.
+- Los valores mostrados coinciden con el cálculo del motor (prueba automática).
+
+**HU-15 — Agregar fricción**
+Como estudiante, quiero activar fricción del aire, para ver un péndulo más realista.
+- Dado un parámetro b (1/s) con valor 0 por defecto, entonces con b = 0 el comportamiento es idéntico al actual (las 83 pruebas existentes siguen pasando).
+- Dado b > 0, entonces la amplitud decae en el tiempo y se muestra el decaimiento.
+- Dado un valor de b fuera del rango permitido, entonces se muestra un mensaje en español y se conserva el último valor válido.
+- Con fricción, la curva punteada es la solución lineal amortiguada del mismo b, para que la comparación siga siendo justa.
+
+**HU-16 — Entender el origen de la gráfica y el signo**
+Como estudiante, quiero saber de dónde sale cada curva y por qué θ toma valores positivos y negativos.
+- Dado un panel "De dónde sale esta gráfica", entonces explica la curva azul (integración numérica de la ecuación) y la punteada (solución analítica lineal).
+- La gráfica dibuja y rotula el eje de referencia θ = 0, y el dibujo del péndulo indica el sentido positivo.
+
+**HU-17 — Ver las ecuaciones de cada modelo**
+Como estudiante, quiero ver las ecuaciones del modelo activo, para relacionar la simulación con la teoría.
+- Lineal: θ'' + (g/L)θ = 0; θ(t) = A·cos(ω₀t + φ); ω₀ = √(g/L); T₀ = 2π√(L/g).
+- No lineal: θ'' + (g/L)·sen θ = 0; T = T₀ · 2K(k)/π con k = sen(φ₀/2) (o el equivalente con la media aritmético-geométrica, que es lo que calcula el motor); desarrollo T ≈ T₀(1 + φ₀²/16 + …).
+- Con fricción: se muestra el término −b·θ'.
+- Las fórmulas que entregue el profesor se incorporan tal cual; hasta recibirlas, se usan las anteriores (riesgo R-2).
+
+**HU-18 — Conocer cada parámetro**
+Como estudiante, quiero una explicación de cada parámetro: de dónde sale el valor, para qué sirve y qué pasa si lo omito o lo altero.
+- Para L, φ₀, g, m y b (y para cada resultado) existen tres textos: origen/valor típico, función en el modelo y efecto de cambiarlo u omitirlo.
+- Todos accesibles por teclado y lector de pantalla, dentro del mismo patrón de ayuda actual.
+
+**HU-19 — Dos experimentos guiados (lineal y no lineal)**
+Como estudiante, quiero un experimento guiado por modo, para predecir el período en cada caso.
+- Experimento lineal: predecir T con φ₀ ≤ 10° y verificar con T₀ = 2π√(L/g).
+- Experimento no lineal: predecir T con φ₀ hasta 60° usando la fórmula no lineal y comparar con T₀.
+- Los textos de los experimentos existentes se actualizan para decir que el período no depende de la masa y sí del ángulo (ya parcialmente hecho en el código sin commitear).
+
+## Requisitos no funcionales añadidos
+
+| Categoría | Requisito |
+|---|---|
+| Exactitud | Con b = 0 en modo No lineal, el período simulado coincide con el calculado por AGM con error relativo < 1×10⁻³ en 10 períodos; en modo Lineal, con T₀ con error < 1×10⁻⁶ (ya verificado en el MVP) |
+| Compatibilidad | Con b = 0 y modo No lineal, el comportamiento actual no cambia; la suite existente sigue en verde |
+| Accesibilidad | Selector de modo y botón de linealización con teclado, roles y estados ARIA; contraste AA en los textos nuevos |
+| Rendimiento | Sin pérdida frente a lo medido en `docs/07-rendimiento-a11y-seo.md` |
+| Privacidad | Sin cambios: cero datos personales |
+
+## Riesgos nuevos
+
+| ID | Riesgo | Impacto | Mitigación |
+|---|---|---|---|
+| R-1 | El rango de 15° del profesor puede referirse solo al modo lineal | Bajo | Se fijó 15° lineal / 60° no lineal; confirmar con él |
+| R-2 | Las ecuaciones del modelo no lineal "que proporciona el profesor" aún no se han recibido | Medio | **Resuelto 2026-10-06:** llegó la foto (Wikipedia, "Péndulo simple", oscilaciones de mayor amplitud): la serie `T = T₀·Σ[(2n)!/(2²ⁿ(n!)²)]²·sen²ⁿ(θ/2)` y `T ≈ T₀(1 + θ²/16)`. Ya están en la plataforma; la serie coincide con el cálculo por media aritmético-geométrica (error relativo < 1e-12, con prueba) |
+| R-3 | Rango de b: el movimiento sobreamortiguado no es oscilatorio (b ≥ 2ω₀) | Medio | Limitar b a un máximo por debajo de 2ω₀ mínimo; definirlo en Fase 3 |
+| R-4 | Plazo de una semana para varias historias | Alto | Priorizar HU-11, HU-13, HU-12 y HU-16 primero; HU-15, HU-17, HU-18 y HU-19 después |
+
+## Priorización
+
+1. **Debe (sustentación):** HU-11, HU-12, HU-13, HU-16.
+2. **Debería:** HU-14, HU-17, HU-18.
+3. **Podría dentro de la semana:** HU-15 (fricción), HU-19 (dos experimentos).

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup v2 · Dirección B: pestañas de teoría</title>
+<style>
+  :root { --bg:#f8fafc; --surface:#fff; --text:#0f172a; --muted:#475569; --border:#cbd5e1; --border-strong:#64748b; --accent:#2563eb; --danger:#b91c1c; --warn-bg:#fef3c7; --warn-border:#f59e0b; --focus:#b45309; --info:#eff6ff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif}
+  .app{max-width:1100px;margin:0 auto;padding:16px}
+  h1{font-size:1.25rem;margin:0}
+  header p{margin:2px 0 0;color:var(--muted)}
+  .nota{background:#f1f5f9;border:1px dashed var(--border-strong);padding:8px 12px;border-radius:8px;font-size:.8rem;color:var(--muted);margin:12px 0}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px}
+  .card h2{font-size:.95rem;margin:0 0 8px}
+  button{font:inherit;font-size:.85rem;padding:6px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+  button.sec{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+  button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+  .seg{display:inline-flex;border:1px solid var(--border-strong);border-radius:6px;overflow:hidden}
+  .seg button{border:0;border-radius:0;background:var(--surface);color:var(--text)}
+  .seg button[aria-pressed=true]{background:var(--accent);color:#fff}
+  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .ctrl label{display:block;font-size:.85rem;margin-bottom:2px}
+  .ctrl .in{display:flex;gap:6px;align-items:center}
+  .ctrl input[type=text]{width:64px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:6px}
+  .q{width:20px;height:20px;border-radius:50%;padding:0;background:var(--surface);color:var(--muted);border:1px solid var(--border-strong);font-size:.7rem}
+  .banner{background:var(--warn-bg);border-left:4px solid var(--warn-border);padding:8px 10px;border-radius:6px;font-size:.85rem;margin:8px 0}
+  .info{background:var(--info);border-left:4px solid var(--accent);padding:8px 10px;border-radius:6px;font-size:.8rem;margin-top:6px}
+  .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:12px}
+  .tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-top:12px;flex-wrap:wrap}
+  .tabs button{background:var(--surface);color:var(--text);border:1px solid var(--border);border-bottom:0;border-radius:6px 6px 0 0}
+  .tabs button[aria-selected=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .panel{display:none;border:1px solid var(--border);border-top:0;background:var(--surface);padding:12px;border-radius:0 0 8px 8px;font-size:.85rem}
+  .panel.on{display:block}
+  .eq{font-family:Cambria,Georgia,serif;font-size:1rem;background:#f1f5f9;padding:6px 10px;border-radius:6px;margin:6px 0}
+  table{border-collapse:collapse;font-size:.8rem;width:100%}
+  td,th{border-bottom:1px solid var(--border);padding:4px 6px;text-align:left;vertical-align:top}
+  .legend{display:flex;gap:16px;font-size:.8rem;color:var(--muted)}
+  .sw{display:inline-block;width:22px;border-top:3px solid var(--accent);vertical-align:middle;margin-right:4px}
+  .sw.d{border-top:3px dashed #b45309}
+  @media (max-width:800px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>Laboratorio MAS · Péndulo simple</h1><p>Mockup v2 — Dirección B: controles arriba en una fila, simulación y gráfica lado a lado, teoría en pestañas.</p></header>
+<div class="nota"><b>Dirección B.</b> Reorganiza más: los 5 parámetros pasan a una barra horizontal, la animación y la gráfica quedan juntas para compararlas de un vistazo y la teoría vive en 4 pestañas (una sola visible a la vez). Ventaja: ves el movimiento y su gráfica a la vez, sin scroll. Riesgo: es un cambio de layout mayor que el actual.</div>
+
+<div class="row" style="margin:12px 0">
+  <span id="lm" style="font-weight:600">Modelo:</span>
+  <div class="seg" role="group" aria-labelledby="lm"><button aria-pressed="true">Lineal (θ pequeño)</button><button aria-pressed="false">No lineal (real)</button></div>
+  <span style="color:var(--muted);font-size:.8rem">Ángulo inicial hasta 15°</span>
+  <span style="flex:1"></span><button>▶ Reproducir</button><button class="sec">Reiniciar</button>
+</div>
+
+<section class="card" aria-label="Parámetros"><div class="controls">
+  <div class="ctrl"><label>Longitud L (m)</label><div class="in"><input type="text" value="1,0"><button class="q" aria-label="Ayuda">?</button></div></div>
+  <div class="ctrl"><label>Ángulo φ₀ (°)</label><div class="in"><input type="text" value="10"><button class="q" aria-label="Ayuda">?</button></div></div>
+  <div class="ctrl"><label>Gravedad g (m/s²)</label><div class="in"><input type="text" value="9,8"><button class="q" aria-label="Ayuda">?</button></div></div>
+  <div class="ctrl"><label>Masa m (kg)</label><div class="in"><input type="text" value="0,5"><button class="q" aria-label="Ayuda">?</button></div><div class="info">No afecta θ(t) ni T.</div></div>
+  <div class="ctrl"><label>Fricción b (1/s)</label><div class="in"><input type="text" value="0,0"><button class="q" aria-label="Ayuda">?</button></div></div>
+</div></section>
+
+<div class="two">
+  <section class="card" aria-label="Simulación">
+    <svg viewBox="0 0 320 220" width="100%" role="img" aria-label="Péndulo con eje vertical y sentidos positivo y negativo">
+      <line x1="160" y1="10" x2="160" y2="205" stroke="#94a3b8" stroke-dasharray="4 4"/>
+      <text x="166" y="24" font-size="10" fill="#475569">θ = 0</text>
+      <line x1="160" y1="10" x2="200" y2="150" stroke="#0f172a" stroke-width="2"/><circle cx="200" cy="150" r="13" fill="#2563eb"/>
+      <text x="205" y="60" font-size="10" fill="#b45309">+ derecha</text><text x="70" y="60" font-size="10" fill="#b45309">− izquierda</text>
+    </svg>
+  </section>
+  <section class="card" aria-label="Gráfica">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">θ(t)</h2><button class="sec" aria-pressed="true">Ocultar aprox. lineal</button></div>
+    <svg viewBox="0 0 320 180" width="100%" role="img" aria-label="Gráfica del ángulo en el tiempo">
+      <line x1="30" y1="90" x2="312" y2="90" stroke="#94a3b8"/><text x="34" y="86" font-size="9" fill="#475569">θ = 0</text>
+      <path d="M30 40 C80 40 90 140 140 140 S200 40 250 40 S300 140 312 140" fill="none" stroke="#2563eb" stroke-width="2.2"/>
+      <path d="M30 40 C80 40 90 140 140 140 S200 40 250 40 S300 140 312 140" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 5"/>
+    </svg>
+    <div class="legend"><span><i class="sw"></i>Simulada</span><span><i class="sw d"></i>Aprox. lineal</span></div>
+    <div class="banner" role="status" style="font-size:.8rem">Con φ₀ ≤ 10° las dos curvas casi se superponen: la aproximación es buena.</div>
+  </section>
+</div>
+
+<div class="tabs" role="tablist" aria-label="Teoría">
+  <button role="tab" aria-selected="true" data-p="p1">Ecuaciones</button>
+  <button role="tab" aria-selected="false" data-p="p2">De dónde sale la gráfica</button>
+  <button role="tab" aria-selected="false" data-p="p3">Ejes y signos</button>
+  <button role="tab" aria-selected="false" data-p="p4">Parámetros</button>
+</div>
+<div class="panel on" id="p1" role="tabpanel"><div class="eq">θ'' + (g/L)·θ + b·θ' = 0 &nbsp;(lineal)</div><div class="eq">θ(t) = A·cos(ω₀t + φ), ω₀ = √(g/L), T₀ = 2π√(L/g)</div><p>Válido solo para ángulos muy pequeños: sen θ ≈ θ (menos de 10°, idealmente tendiendo a 0).</p></div>
+<div class="panel" id="p2" role="tabpanel"><p><b>Curva azul:</b> integración numérica (RK4) de la ecuación diferencial. <b>Curva punteada:</b> solución analítica lineal. No es una captura del dibujo.</p></div>
+<div class="panel" id="p3" role="tabpanel"><p>Eje de referencia: la vertical por el apoyo (θ = 0). Positivo a la derecha, negativo a la izquierda.</p></div>
+<div class="panel" id="p4" role="tabpanel"><table><tr><th>Parámetro</th><th>De dónde sale</th><th>Para qué sirve</th><th>Si lo omites o cambias</th></tr><tr><td>L</td><td>Medida del hilo</td><td>Fija T₀</td><td>L×4 ⇒ T×2</td></tr><tr><td>m</td><td>Masa de la bolita</td><td>Solo la energía</td><td>No cambia T</td></tr><tr><td>b</td><td>Aire</td><td>Amortigua</td><td>b = 0: sin pérdidas</td></tr></table></div>
+</div>
+<script>
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id===b.dataset.p))});
+</script>
+</body>
+</html>

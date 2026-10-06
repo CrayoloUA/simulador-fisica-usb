@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup v2 · Dirección C en móvil (375 px)</title>
+<style>
+  :root { --bg:#f8fafc; --surface:#fff; --text:#0f172a; --muted:#475569; --border:#cbd5e1; --border-strong:#64748b; --accent:#2563eb; --danger:#b91c1c; --warn-bg:#fef3c7; --warn-border:#f59e0b; --focus:#b45309; --info:#eff6ff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:#e2e8f0;font-family:system-ui,sans-serif;color:var(--text);padding:16px}
+  h1{font-size:1.1rem;margin:0 0 4px} .sub{color:var(--muted);font-size:.85rem;margin:0 0 16px;max-width:720px}
+  .phones{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+  .phone{width:375px;border:10px solid #0f172a;border-radius:36px;background:var(--bg);overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .phone .notch{height:22px;background:#0f172a}
+  .screen{padding:10px;height:760px;overflow:auto}
+  .cap{font-size:.8rem;font-weight:600;margin:0 0 6px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
+  .card h2{font-size:.9rem;margin:0 0 6px}
+  button{font:inherit;font-size:.85rem;min-height:44px;padding:6px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff}
+  button.sec{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+  .seg{display:flex;border:1px solid var(--border-strong);border-radius:6px;overflow:hidden}
+  .seg button{flex:1;border:0;border-radius:0;background:var(--surface);color:var(--text)}
+  .seg button[aria-pressed=true]{background:var(--accent);color:#fff}
+  .ctrl{margin-bottom:8px}
+  .ctrl label{display:flex;justify-content:space-between;align-items:center;font-size:.85rem}
+  .ctrl input[type=text]{width:64px;min-height:44px;padding:3px 6px;border:1px solid var(--border-strong);border-radius:6px}
+  .ctrl input.bad{border:2px solid var(--danger)}
+  .q{width:44px;min-height:44px;border-radius:50%;padding:0;background:var(--surface);color:var(--muted);border:1px solid var(--border-strong)}
+  .pop{background:var(--info);border-left:4px solid var(--accent);border-radius:6px;padding:8px 10px;font-size:.8rem;margin:4px 0}
+  .pop b{display:block;margin-top:4px}
+  .banner{background:var(--warn-bg);border-left:4px solid var(--warn-border);padding:8px 10px;border-radius:6px;font-size:.8rem}
+  .eq{font-family:Cambria,Georgia,serif;font-size:.9rem;background:#f1f5f9;padding:6px 8px;border-radius:6px;margin:6px 0;overflow-x:auto}
+  .err{color:var(--danger);font-size:.75rem}
+  .legend{display:flex;gap:10px;font-size:.75rem;color:var(--muted);flex-wrap:wrap}
+  .sw{display:inline-block;width:20px;border-top:3px solid var(--accent);vertical-align:middle;margin-right:4px}
+  .sw.d{border-top:3px dashed #b45309}
+  details{border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-bottom:8px}
+  summary{padding:12px;font-weight:600;font-size:.85rem;min-height:44px}
+  details p{padding:0 12px 10px;margin:0;font-size:.8rem}
+</style>
+</head>
+<body>
+<h1>Dirección C en móvil — 375 px, sin scroll horizontal</h1>
+<p class="sub">En pantallas estrechas el panel de teoría pasa debajo de la gráfica como acordeones (mismo contenido que la columna derecha de escritorio). Todos los objetivos táctiles miden al menos 44 px. Tres estados: normal en modo No lineal, modo Lineal con la curva punteada oculta, y error de fricción.</p>
+<div class="phones">
+
+<div><p class="cap">1. No lineal, φ₀ = 40°, curva punteada visible</p>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="card"><div class="seg" role="group" aria-label="Modelo"><button aria-pressed="false">Lineal</button><button aria-pressed="true">No lineal</button></div><p style="font-size:.75rem;color:var(--muted);margin:6px 0 0">Ángulo inicial hasta 60°</p></div>
+  <div class="card">
+    <svg viewBox="0 0 320 110" width="100%" role="img" aria-label="Péndulo con eje vertical, positivo a la derecha"><line x1="160" y1="6" x2="160" y2="105" stroke="#94a3b8" stroke-dasharray="4 4"/><text x="166" y="16" font-size="9" fill="#475569">θ = 0</text><line x1="160" y1="6" x2="215" y2="80" stroke="#0f172a" stroke-width="2"/><circle cx="215" cy="80" r="11" fill="#2563eb"/><text x="190" y="45" font-size="9" fill="#b45309">+ →</text><text x="105" y="45" font-size="9" fill="#b45309">← −</text></svg>
+    <div style="display:flex;gap:8px"><button style="flex:1">▶ Reproducir</button><button class="sec" style="flex:1">Reiniciar</button></div>
+  </div>
+  <div class="card"><h2>θ(t)</h2>
+    <svg viewBox="0 0 320 140" width="100%" role="img" aria-label="Gráfica θ(t)"><line x1="20" y1="70" x2="314" y2="70" stroke="#94a3b8"/><path d="M20 20 C60 20 70 120 105 120 S150 20 190 20 S235 120 270 120 S305 20 314 20" fill="none" stroke="#2563eb" stroke-width="2.2"/><path d="M20 20 C55 20 66 120 98 120 S141 20 176 20 S219 120 252 120 S293 20 314 40" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 5"/></svg>
+    <div class="legend"><span><i class="sw"></i>Simulada</span><span><i class="sw d"></i>Aprox. lineal</span></div>
+    <button class="sec" aria-pressed="true" style="width:100%;margin-top:8px">Ocultar aproximación lineal</button>
+    <div class="banner" role="status" style="margin-top:8px">Con φ₀ = 40°, T es 3,2 % mayor que T₀: las curvas se separan desde el primer ciclo.</div>
+  </div>
+  <div class="card"><h2>Parámetros</h2>
+    <div class="ctrl"><label>L (m)<span><input type="text" value="1,0"><button class="q" aria-label="Ayuda L">?</button></span></label></div>
+    <div class="ctrl"><label>φ₀ (°)<span><input type="text" value="40"><button class="q" aria-label="Ayuda">?</button></span></label></div>
+    <div class="ctrl"><label>m (kg)<span><input type="text" value="0,5"><button class="q" aria-expanded="true" aria-label="Ayuda masa">?</button></span></label>
+      <div class="pop"><b>De dónde sale</b>Balanza (kg).<b>Para qué sirve</b>Solo la energía.<b>Si la cambias</b>θ(t) y T no cambian: m se cancela.</div></div>
+  </div>
+  <details open><summary>Teoría · No lineal</summary><p class="eq">θ'' + (g/L)·sen θ + b·θ' = 0</p><p class="eq">T = T₀·2K(k)/π, k = sen(φ₀/2)</p></details>
+  <details><summary>De dónde sale la gráfica</summary><p>Azul: integración numérica (RK4). Punteada: solución analítica lineal.</p></details>
+  <details><summary>Por qué θ es + y −</summary><p>Eje vertical θ = 0: derecha positivo, izquierda negativo.</p></details>
+</div></div></div>
+
+<div><p class="cap">2. Lineal, φ₀ = 10°, curva punteada oculta</p>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="card"><div class="seg" role="group" aria-label="Modelo"><button aria-pressed="true">Lineal</button><button aria-pressed="false">No lineal</button></div><p style="font-size:.75rem;color:var(--muted);margin:6px 0 0">Ángulo inicial hasta 15°</p></div>
+  <div class="card"><h2>θ(t)</h2>
+    <svg viewBox="0 0 320 140" width="100%" role="img" aria-label="Gráfica θ(t), solo la simulada"><line x1="20" y1="70" x2="314" y2="70" stroke="#94a3b8"/><path d="M20 30 C60 30 70 110 105 110 S150 30 190 30 S235 110 270 110 S305 30 314 30" fill="none" stroke="#2563eb" stroke-width="2.2"/></svg>
+    <div class="legend"><span><i class="sw"></i>Simulada</span></div>
+    <button class="sec" aria-pressed="false" style="width:100%;margin-top:8px">Mostrar aproximación lineal</button>
+    <div class="banner" role="status" style="margin-top:8px;background:var(--info);border-color:var(--accent)">Con φ₀ = 10° las dos curvas casi coinciden: sen θ ≈ θ es una buena aproximación.</div>
+  </div>
+  <details open><summary>Teoría · Lineal</summary><p class="eq">θ'' + (g/L)·θ + b·θ' = 0</p><p class="eq">θ(t) = A·cos(ω₀t + φ), T₀ = 2π√(L/g)</p></details>
+  <details><summary>Cuándo vale esta aproximación</summary><p>Solo con ángulos muy pequeños: menos de 10°, idealmente tendiendo a 0.</p></details>
+</div></div></div>
+
+<div><p class="cap">3. Error de fricción (campo inválido)</p>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="card"><h2>Parámetros</h2>
+    <div class="ctrl"><label>b (1/s)<span><input type="text" value="9x" class="bad" aria-invalid="true" aria-describedby="e1"><button class="q" aria-label="Ayuda b">?</button></span></label><div class="err" id="e1" role="alert">Escribe un número entre 0 y 0,4 (1/s). Se conserva el último valor válido: 0,1.</div></div>
+    <div class="ctrl"><label>φ₀ (°)<span><input type="text" value="40"><button class="q" aria-label="Ayuda">?</button></span></label></div>
+  </div>
+  <div class="card"><div class="banner" role="status">Al pasar a modo Lineal, φ₀ se ajustó a 15° (máximo de ese modo).</div></div>
+</div></div></div>
+
+</div>
+</body>
+</html>
