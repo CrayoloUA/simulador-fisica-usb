@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { pendulumModels } from '../engine/phenomena/pendulum';
 import { simplePendulum } from '../engine/phenomena/simplePendulum';
 import { defaultParams } from '../engine/validate';
 import { simplePendulumContent } from './simplePendulumContent';
@@ -290,5 +291,34 @@ describe('simplePendulumContent: ayuda de parámetros en tres textos (HU-12, HU-
 
   it('solo la masa lleva aviso permanente', () => {
     expect(simplePendulumContent.paramHelp.filter((h) => h.note).map((h) => h.paramKey)).toEqual(['m']);
+  });
+});
+
+describe('simplePendulumContent: experimentos y resultados tras la revisión de la Fase 6', () => {
+  it('los experimentos están escritos para el modelo no lineal y sus valores caben en su esquema', () => {
+    expect(simplePendulumContent.experimentModel).toBe('no-lineal');
+    const schema = pendulumModels[simplePendulumContent.experimentModel].paramSchema;
+    for (const experiment of simplePendulumContent.experiments) {
+      for (const step of experiment.steps) {
+        for (const [key, value] of Object.entries(step.prepareParams ?? {})) {
+          const spec = schema.find((s) => s.key === key)!;
+          expect(value).toBeGreaterThanOrEqual(spec.min);
+          expect(value).toBeLessThanOrEqual(spec.max);
+        }
+      }
+    }
+  });
+
+  it('un experimento pide 60° en sus instrucciones (por eso no puede correr en el modelo lineal, máximo 15°)', () => {
+    expect(allExperimentText()).toContain('60°');
+    const linealMax = pendulumModels.lineal.paramSchema.find((s) => s.key === 'phi0')!.max;
+    expect(linealMax).toBeLessThan(60);
+  });
+
+  it('la ayuda de T y de f aclara que son los valores sin fricción', () => {
+    for (const key of ['T', 'f']) {
+      const text = simplePendulumContent.resultHelp.find((h) => h.resultKey === key)!.explanation;
+      expect(text).toContain('sin fricción');
+    }
   });
 });

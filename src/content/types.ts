@@ -78,6 +78,11 @@ export interface ModelTheory {
 }
 
 export interface LabContent {
+  /**
+   * Modelo para el que están escritos los experimentos (valores de "Preparar valores" y cifras de
+   * las conclusiones). Al elegir un experimento, la app pasa a este modelo.
+   */
+  experimentModel: PendulumModel;
   theoryByModel: Record<PendulumModel, ModelTheory>;
   paramHelp: ParamHelp[];
   presets: Record<string, PresetValue[]>;

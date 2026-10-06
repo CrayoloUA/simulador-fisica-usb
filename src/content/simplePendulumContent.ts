@@ -7,6 +7,8 @@ const SIGN_CONVENTION =
   'por eso θ(t) toma valores positivos y negativos del mismo tamaño mientras oscila.';
 
 export const simplePendulumContent: LabContent = {
+  // Los experimentos usan φ₀ hasta 60° y cifras del modelo real: no caben en el lineal (máx. 15°).
+  experimentModel: 'no-lineal',
   theoryByModel: {
     lineal: {
       title: 'Modelo lineal (ángulo pequeño)',
@@ -107,7 +109,7 @@ export const simplePendulumContent: LabContent = {
       unit: 's',
       decimals: 3,
       explanation:
-        'El período real para el ángulo que elegiste: el tiempo que tarda el péndulo en completar una oscilación completa (ida y vuelta). Con ángulos grandes es algo mayor que T₀.',
+        'El período real para el ángulo que elegiste: el tiempo que tarda el péndulo en completar una oscilación completa (ida y vuelta). Con ángulos grandes es algo mayor que T₀. Es el período sin fricción: con fricción (b > 0) cada oscilación tarda un poco más.',
     },
     {
       resultKey: 'T0',
@@ -122,7 +124,8 @@ export const simplePendulumContent: LabContent = {
       label: 'Frecuencia f',
       unit: 'Hz',
       decimals: 3,
-      explanation: 'Cuántas oscilaciones completas hace en un segundo, con el período real. Es 1 dividido entre T.',
+      explanation:
+        'Cuántas oscilaciones completas hace en un segundo, con el período real sin fricción. Es 1 dividido entre T.',
     },
     {
       resultKey: 'omega0',
