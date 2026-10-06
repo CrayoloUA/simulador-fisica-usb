@@ -3,3 +3,6 @@ dist
 coverage
 *.log
 *.stackdump
+
+.env*
+!.env.example
