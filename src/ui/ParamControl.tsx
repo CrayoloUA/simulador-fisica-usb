@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { formatNumber, parseDecimal } from '../engine/numbers';
+import type { ParamHelp } from '../content/types';
 import type { ParamSpec } from '../engine/types';
 
 interface PresetOption {
@@ -11,7 +12,7 @@ interface Props {
   spec: ParamSpec;
   raw: string;
   error?: string;
-  help?: string;
+  help?: ParamHelp;
   presets?: PresetOption[];
   highlighted?: boolean;
   onChange: (raw: string) => void;
@@ -48,10 +49,19 @@ export function ParamControl({ spec, raw, error, help, presets, highlighted, onC
           </button>
         )}
       </div>
+      {help?.note && <p className="param-note">{help.note}</p>}
       {help && helpOpen && (
-        <p id={helpId} className="help-card">
-          {help}
-        </p>
+        <div id={helpId} className="help-card">
+          <p>
+            <strong>De dónde sale.</strong> {help.origin}
+          </p>
+          <p>
+            <strong>Para qué sirve.</strong> {help.role}
+          </p>
+          <p>
+            <strong>Si la cambias u omites.</strong> {help.effect}
+          </p>
+        </div>
       )}
       <div className="param-row">
         <input

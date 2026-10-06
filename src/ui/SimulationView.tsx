@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { DEG_TO_RAD, formatNumber } from '../engine/numbers';
 import { Simulation } from '../engine/simulation';
 import type { Params, Phenomenon } from '../engine/types';
@@ -17,15 +17,29 @@ interface Props {
   running: boolean;
   speed: number;
   resetToken: number;
+  /** Muestra u oculta la curva punteada (aproximación lineal). No reinicia la simulación. */
+  showLinear?: boolean;
+  /** Controles que van junto a la gráfica (p. ej. el botón de la aproximación lineal). */
+  chartControls?: ReactNode;
 }
 
-export function SimulationView({ phenomenon, params, running, speed, resetToken }: Props) {
+export function SimulationView({
+  phenomenon,
+  params,
+  running,
+  speed,
+  resetToken,
+  showLinear = true,
+  chartControls,
+}: Props) {
   const simCanvas = useRef<HTMLCanvasElement>(null);
   const chartCanvas = useRef<HTMLCanvasElement>(null);
   const liveRef = useRef<HTMLParagraphElement>(null);
   const simRef = useRef<Simulation | null>(null);
   const runningRef = useRef(running);
   const speedRef = useRef(speed);
+  // Como running y speed: va en una ref para que alternarla no recree la Simulation.
+  const showLinearRef = useRef(showLinear);
   const [error, setError] = useState<string | null>(null);
 
   const liveId = useId();
@@ -37,7 +51,11 @@ export function SimulationView({ phenomenon, params, running, speed, resetToken 
     const simCtx = simCanvas.current?.getContext('2d');
     const chartCtx = chartCanvas.current?.getContext('2d');
     if (simCtx) drawPendulum(simCtx, SIM_W, SIM_H, sim.state, sim.params);
-    if (chartCtx) drawChart(chartCtx, CHART_W, CHART_H, sim.samples, sim.params.phi0 * DEG_TO_RAD);
+    if (chartCtx) {
+      drawChart(chartCtx, CHART_W, CHART_H, sim.samples, sim.params.phi0 * DEG_TO_RAD, {
+        showLinear: showLinearRef.current,
+      });
+    }
     paintedT.current = sim.t;
     liveStale.current = true;
   }, []);
@@ -56,6 +74,13 @@ export function SimulationView({ phenomenon, params, running, speed, resetToken 
     runningRef.current = running;
     speedRef.current = speed;
   }, [running, speed]);
+
+  // Con la simulación en pausa el bucle no repinta (sim.t no cambia): se repinta aquí, con las
+  // mismas muestras. No depende de la creación de la Simulation, así que no la reinicia.
+  useEffect(() => {
+    showLinearRef.current = showLinear;
+    if (simRef.current) paintCanvases(simRef.current);
+  }, [showLinear, paintCanvases]);
 
   useEffect(() => {
     const sim = new Simulation(phenomenon, params);
@@ -103,12 +128,13 @@ export function SimulationView({ phenomenon, params, running, speed, resetToken 
           {error} Presiona Reiniciar para volver a empezar.
         </p>
       )}
+      {chartControls && <div className="chart-controls">{chartControls}</div>}
       <canvas
         ref={chartCanvas}
         width={CHART_W}
         height={CHART_H}
         role="img"
-        aria-label="Gráfica del ángulo en función del tiempo: simulado y teórico"
+        aria-label="Gráfica del ángulo en función del tiempo: simulado y aproximación lineal"
       />
     </section>
   );

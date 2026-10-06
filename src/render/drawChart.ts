@@ -42,7 +42,9 @@ export function drawChart(
   height: number,
   samples: Sample[],
   amplitudeRad: number,
+  options: { showLinear?: boolean } = {},
 ): void {
+  const showLinear = options.showLinear ?? true;
   ctx.clearRect(0, 0, width, height);
   if (samples.length === 0) return;
 
@@ -67,17 +69,23 @@ export function drawChart(
   ctx.font = '11px system-ui, sans-serif';
   const yLabel = (yMax / DEG_TO_RAD).toFixed(0);
   ctx.textAlign = 'right';
-  ctx.fillText(`${yLabel}°`, PAD.left - 6, PAD.top + 4);
+  // Positivo = a la derecha de la vertical de reposo; negativo = a la izquierda.
+  ctx.fillText(`+${yLabel}°`, PAD.left - 6, PAD.top + 4);
   ctx.fillText(`-${yLabel}°`, PAD.left - 6, height - PAD.bottom);
+  ctx.textAlign = 'left';
+  ctx.fillText('θ = 0 (vertical)', PAD.left + 4, y(0) - 4);
   ctx.textAlign = 'center';
   ctx.fillText(`θ(t)   t: ${tStart.toFixed(0)} a ${tEnd.toFixed(0)} s`, PAD.left + plotW / 2, height - 6);
 
-  drawSeries(ctx, samples, (s) => s.theory.theta, x, y, COLOR_THEORY, true);
+  // La simulada va primero y la aproximación lineal (punteada) encima, para que ambas se vean cuando coinciden.
   drawSeries(ctx, samples, (s) => s.values.theta, x, y, COLOR_SIMULATED, false);
+  if (showLinear) drawSeries(ctx, samples, (s) => s.theory.theta, x, y, COLOR_THEORY, true);
 
   ctx.textAlign = 'left';
   ctx.fillStyle = COLOR_SIMULATED;
   ctx.fillText('Simulada', PAD.left + 8, 12);
-  ctx.fillStyle = COLOR_THEORY;
-  ctx.fillText('Teórica', PAD.left + 78, 12);
+  if (showLinear) {
+    ctx.fillStyle = COLOR_THEORY;
+    ctx.fillText('Aprox. lineal', PAD.left + 78, 12);
+  }
 }

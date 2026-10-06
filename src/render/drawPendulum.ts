@@ -27,6 +27,16 @@ export function drawPendulum(
   ctx.stroke();
   ctx.setLineDash([]);
 
+  // Eje de referencia: la vertical por el apoyo es θ = 0; a la derecha θ > 0, a la izquierda θ < 0.
+  ctx.fillStyle = '#475569';
+  ctx.font = '12px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('θ = 0 (vertical)', pivotX, 14);
+  ctx.textAlign = 'left';
+  ctx.fillText('θ > 0 →', pivotX + 14, PIVOT_Y + 4);
+  ctx.textAlign = 'right';
+  ctx.fillText('← θ < 0', pivotX - 14, PIVOT_Y + 4);
+
   ctx.strokeStyle = '#334155';
   ctx.lineWidth = 2;
   ctx.beginPath();

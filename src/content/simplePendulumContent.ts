@@ -1,26 +1,95 @@
 import { formatNumber } from '../engine/numbers';
 import type { LabContent } from './types';
 
+const SIGN_CONVENTION =
+  'El eje de referencia es la vertical que pasa por el punto de apoyo (θ = 0, el péndulo en reposo). ' +
+  'El ángulo se mide como positivo hacia la derecha de esa vertical y negativo hacia la izquierda; ' +
+  'por eso θ(t) toma valores positivos y negativos del mismo tamaño mientras oscila.';
+
 export const simplePendulumContent: LabContent = {
+  theoryByModel: {
+    lineal: {
+      title: 'Modelo lineal (ángulo pequeño)',
+      equations: [
+        "θ'' + (g/L)·θ + b·θ' = 0",
+        'θ(t) = A·cos(ω₀t + φ), con ω₀ = √(g/L) (sin fricción, b = 0)',
+        'T₀ = 2π√(L/g)',
+      ],
+      validity:
+        'Parte de la aproximación sen θ ≈ θ, que solo vale para ángulos muy pequeños: por debajo de 10°, ' +
+        'idealmente tendiendo a 0. Con ángulos mayores el período real es más largo que T₀ y el modelo se equivoca.',
+      chartOrigin:
+        'La curva azul (Simulada) sale de una integración numérica: el programa resuelve paso a paso, con el ' +
+        'método RK4, la ecuación diferencial del modelo y dibuja cada valor que calcula; no es una fórmula ' +
+        'escrita a mano ni una captura del dibujo del péndulo. La curva punteada (Aprox. lineal) sí es una ' +
+        'fórmula: la solución analítica de la ecuación linealizada. En este modelo las dos resuelven la misma ' +
+        'ecuación, por eso coinciden.',
+      signConvention: SIGN_CONVENTION,
+    },
+    'no-lineal': {
+      title: 'Modelo no lineal (real)',
+      equations: [
+        "θ'' + (g/L)·sen θ + b·θ' = 0",
+        'T(φ₀) = T₀ · [1 + (1/2)²·sen²(φ₀/2) + (1·3 / 2·4)²·sen⁴(φ₀/2) + (1·3·5 / 2·4·6)²·sen⁶(φ₀/2) + …]',
+        'T(φ₀) = T₀ · Σ [ (2n)! / (2²ⁿ·(n!)²) ]² · sen²ⁿ(φ₀/2), con n desde 0 hasta ∞, y T₀ = 2π√(L/g)',
+        'T ≈ T₀ · (1 + φ₀²/16), con φ₀ en radianes (solo el primer término corrector)',
+        'La misma serie es T = T₀ · 2K(k)/π, con k = sen(φ₀/2) (K: integral elíptica de primera especie); el programa la calcula con la media aritmético-geométrica',
+      ],
+      validity:
+        'No supone sen θ ≈ θ, así que sirve también para ángulos grandes (hasta 60°). El período deja de ser ' +
+        '2π√(L/g): crece con φ₀. Por debajo de 10° coincide con el modelo lineal; por encima, la diferencia ' +
+        'con T₀ ya se nota.',
+      chartOrigin:
+        'La curva azul (Simulada) sale de una integración numérica: el programa resuelve paso a paso, con el ' +
+        'método RK4, la ecuación con sen θ y dibuja cada valor que calcula; no es una fórmula escrita a mano ' +
+        'ni una captura del dibujo. La curva punteada (Aprox. lineal) es la solución analítica de la ecuación ' +
+        'linealizada. Las dos curvas se separan desde el primer ciclo porque resuelven ecuaciones distintas: ' +
+        'la azul usa sen θ y la punteada usa θ. Como el período real es mayor que T₀, la diferencia se ' +
+        'acumula y crece con φ₀.',
+      signConvention: SIGN_CONVENTION,
+    },
+  },
   paramHelp: [
     {
       paramKey: 'L',
-      explanation:
-        'Qué tan largo es el hilo, desde donde cuelga hasta el centro de la bolita. Un péndulo de reloj de pared mide cerca de 1 m.',
+      origin:
+        'Qué tan largo es el hilo, desde donde cuelga hasta el centro de la bolita. El péndulo de un reloj de pie mide cerca de 1 m. En un montaje real se mide con una cinta métrica.',
+      role: 'Fija el período: T₀ = 2π√(L/g). Un hilo más largo hace oscilaciones más lentas.',
+      effect:
+        'Si la cambias, el período varía con la raíz cuadrada de L: con una longitud cuatro veces mayor, T se duplica. No se puede omitir: sin longitud no hay péndulo.',
     },
     {
       paramKey: 'phi0',
-      explanation: 'Cuánto separas la bolita de la vertical antes de soltarla.',
+      origin: 'La eliges tú: cuánto separas la bolita de la vertical antes de soltarla.',
+      role:
+        'Es la amplitud inicial. En el modelo lineal (hasta 15°) el período no depende de ella; en el modelo no lineal (hasta 60°) sí: a mayor ángulo, mayor período.',
+      effect:
+        'En el modelo no lineal, si la aumentas el período crece y la curva punteada se separa de la azul; en el lineal solo cambia la altura de las ondas. Si fuera 0°, el péndulo quedaría quieto.',
     },
     {
       paramKey: 'g',
-      explanation:
-        'Qué tan fuerte atrae el planeta o astro donde está el péndulo. En la Tierra es 9,8 m/s².',
+      origin:
+        'Depende del planeta o astro donde está el péndulo. En la Tierra es 9,8 m/s²; puedes probar con los valores predefinidos.',
+      role: 'Es la fuerza, por unidad de masa, que devuelve el péndulo hacia la vertical: aparece en ω₀ = √(g/L).',
+      effect:
+        'Con menos gravedad el péndulo es más lento: en la Luna (1,62 m/s²) el período es cerca de 2,5 veces el de la Tierra. Sin gravedad no habría fuerza que lo devuelva y no oscilaría.',
     },
     {
       paramKey: 'm',
-      explanation:
-        'Qué tan pesada es la bolita. Fíjate en el experimento "¿Depende de la masa?": no cambia cuánto tarda en oscilar.',
+      origin: 'Se mide con una balanza (en kg): es la masa de la bolita.',
+      role: "Solo entra en la energía del péndulo. En la ecuación del movimiento la masa se cancela: m·g·sen θ = m·L·θ''.",
+      effect:
+        'Si la cambias, θ(t), el período y la frecuencia no cambian: una bolita liviana y una pesada oscilan igual porque la masa se cancela. Lo único que cambia es la energía, que es proporcional a m. Fíjate en el experimento "¿Depende de la masa?".',
+      note: 'La masa se cancela: θ(t) y T no cambian.',
+    },
+    {
+      paramKey: 'b',
+      origin:
+        'La eliges tú: representa el frenado del aire. Es la fricción por unidad de masa (b = c/m), en 1/s; en un péndulo real se estimaría viendo cuánto baja la amplitud en cada oscilación.',
+      role:
+        'Agrega el término −b·θ\' a la ecuación y frena el movimiento: la amplitud decae como e^(−bt/2) y el período amortiguado es 2π/√(ω₀² − b²/4), un poco mayor que T₀.',
+      effect:
+        'Con b = 0 el péndulo oscila sin perder amplitud, como si no hubiera aire. Con más b la amplitud baja más rápido; el máximo es 0,4 1/s, porque con valores mayores el péndulo dejaría de oscilar.',
     },
   ],
   presets: {
@@ -37,14 +106,23 @@ export const simplePendulumContent: LabContent = {
       label: 'Período T',
       unit: 's',
       decimals: 3,
-      explanation: 'El tiempo que tarda el péndulo en completar una oscilación completa (ida y vuelta).',
+      explanation:
+        'El período real para el ángulo que elegiste: el tiempo que tarda el péndulo en completar una oscilación completa (ida y vuelta). Con ángulos grandes es algo mayor que T₀.',
+    },
+    {
+      resultKey: 'T0',
+      label: 'Período T₀ (ángulo pequeño)',
+      unit: 's',
+      decimals: 3,
+      explanation:
+        'El valor de la fórmula 2π√(L/g), que solo es válido para ángulos pequeños. Es lo que predice la curva punteada; con ángulos grandes el período real T es mayor.',
     },
     {
       resultKey: 'f',
       label: 'Frecuencia f',
       unit: 'Hz',
       decimals: 3,
-      explanation: 'Cuántas oscilaciones completas hace en un segundo. Es 1 dividido entre el período.',
+      explanation: 'Cuántas oscilaciones completas hace en un segundo, con el período real. Es 1 dividido entre T.',
     },
     {
       resultKey: 'omega0',
@@ -56,9 +134,10 @@ export const simplePendulumContent: LabContent = {
     },
   ],
   formula: {
-    template: 'T = 2π√(L/g)',
+    template: 'T₀ = 2π√(L/g)',
     describe: (params, results) =>
-      `T = 2π√(L/g) = 2π√(${formatNumber(params.L)}/${formatNumber(params.g)}) = ${formatNumber(results.T, 3)} s`,
+      `T₀ = 2π√(L/g) = 2π√(${formatNumber(params.L)}/${formatNumber(params.g)}) = ${formatNumber(results.T0, 3)} s. ` +
+      `Con φ₀ = ${formatNumber(params.phi0)}°, el período real es T = ${formatNumber(results.T, 3)} s.`,
   },
   experiments: [
     {
@@ -77,7 +156,7 @@ export const simplePendulumContent: LabContent = {
         {
           instruction:
             "Presiona 'Preparar valores' para dejar el péndulo en su configuración inicial (L = 1 m, φ₀ = 10°).",
-          prepareParams: { L: 1, phi0: 10, g: 9.8, m: 0.5 },
+          prepareParams: { L: 1, phi0: 10, g: 9.8, m: 0.5, b: 0 },
           highlightParamKey: 'L',
         },
         {
@@ -102,7 +181,7 @@ export const simplePendulumContent: LabContent = {
         },
       ],
       conclusion:
-        'El péndulo oscila de un lado a otro pasando por el mismo punto, tal como predijiste. El Período T es el tiempo de una oscilación completa: con L = 1 m y g = 9,8 m/s², T ≈ 2,007 s.',
+        'El péndulo oscila de un lado a otro pasando por el mismo punto. El Período T es el tiempo de una oscilación completa: con L = 1 m, φ₀ = 10° y g = 9,8 m/s², T ≈ 2,011 s.',
     },
     {
       id: 'depende-de-la-masa',
@@ -120,7 +199,7 @@ export const simplePendulumContent: LabContent = {
         {
           instruction:
             "Presiona 'Preparar valores': L = 1 m, φ₀ = 10°, m = 0,5 kg. Presiona Play y anota el Período T.",
-          prepareParams: { L: 1, phi0: 10, g: 9.8, m: 0.5 },
+          prepareParams: { L: 1, phi0: 10, g: 9.8, m: 0.5, b: 0 },
           highlightResultKey: 'T',
         },
         {
@@ -142,14 +221,14 @@ export const simplePendulumContent: LabContent = {
           ],
           correctOptionId: 'igual',
           feedback: {
-            aumento: 'Revisa de nuevo: T = 2π√(L/g) no incluye la masa, así que no debería haber aumentado.',
-            disminuyo: 'Revisa de nuevo: T = 2π√(L/g) no incluye la masa, así que no debería haber disminuido.',
-            igual:
-              'Correcto: la fórmula T = 2π√(L/g) no incluye la masa. Galileo lo notó observando lámparas de una catedral que oscilaban con distinto peso.',
+            aumento: 'Revisa de nuevo: el período no depende de la masa (solo de L, g y el ángulo), así que no debería haber aumentado.',
+            disminuyo: 'Revisa de nuevo: el período no depende de la masa (solo de L, g y el ángulo), así que no debería haber disminuido.',
+            igual: 'Correcto: el período no depende de la masa; solo depende de L, de g y del ángulo inicial.',
           },
         },
       ],
-      conclusion: 'El Período no depende de la masa: T = 2π√(L/g) solo depende de la longitud L y de la gravedad g.',
+      conclusion:
+        'El Período no depende de la masa: solo depende de la longitud L, de la gravedad g y del ángulo inicial φ₀ (con φ₀ fijo, T = 2π√(L/g) multiplicado por un factor que solo depende del ángulo).',
     },
     {
       id: 'depende-de-la-longitud',
@@ -166,7 +245,7 @@ export const simplePendulumContent: LabContent = {
       steps: [
         {
           instruction: "Presiona 'Preparar valores': L = 1 m, φ₀ = 10°. Anota el Período T.",
-          prepareParams: { L: 1, phi0: 10, g: 9.8, m: 0.5 },
+          prepareParams: { L: 1, phi0: 10, g: 9.8, m: 0.5, b: 0 },
           highlightResultKey: 'T',
         },
         {
@@ -188,16 +267,16 @@ export const simplePendulumContent: LabContent = {
           ],
           correctOptionId: 'doble',
           feedback: {
-            igual: 'Revisa de nuevo: T = 2π√(L/g) sí depende de L, a través de una raíz cuadrada.',
+            igual: 'Revisa de nuevo: T sí depende de L, a través de una raíz cuadrada (T₀ = 2π√(L/g)).',
             doble:
-              'Correcto: como T depende de la raíz cuadrada de L, multiplicar L por 4 multiplica T por √4 = 2.',
+              'Correcto: como T depende de la raíz cuadrada de L, multiplicar L por 4 multiplica T por √4 = 2 (de 2,011 s a 4,022 s con φ₀ = 10°).',
             cuadruple:
               'Casi: T depende de la RAÍZ CUADRADA de L, no de L directamente. Por eso L×4 da T×2, no T×4.',
           },
         },
       ],
       conclusion:
-        'El Período sí depende de la longitud, pero no en proporción directa: como T = 2π√(L/g), multiplicar L por 4 multiplica T por √4 = 2.',
+        'El Período sí depende de la longitud, pero no en proporción directa: como T es proporcional a √L (con el mismo ángulo), multiplicar L por 4 multiplica T por √4 = 2.',
     },
     {
       id: 'depende-de-la-gravedad',
@@ -215,7 +294,7 @@ export const simplePendulumContent: LabContent = {
       steps: [
         {
           instruction: "Presiona 'Preparar valores' para la Tierra (g = 9,8 m/s²) y anota el Período T.",
-          prepareParams: { L: 1, phi0: 10, g: 9.8, m: 0.5 },
+          prepareParams: { L: 1, phi0: 10, g: 9.8, m: 0.5, b: 0 },
           highlightResultKey: 'T',
         },
         {
@@ -240,13 +319,13 @@ export const simplePendulumContent: LabContent = {
             menor:
               'Revisa de nuevo: con menos gravedad, la fuerza que regresa el péndulo al centro es más débil, así que tarda MÁS, no menos.',
             mayor:
-              'Correcto: T = 2π√(L/g) tiene la gravedad en el denominador dentro de la raíz, así que con menos g, T es mayor.',
+              'Correcto: T es proporcional a 1/√g (la gravedad está en el denominador, dentro de la raíz), así que con menos g, T es mayor.',
             igual: 'Revisa de nuevo: T sí depende de g. Compara los dos valores de T que anotaste.',
           },
         },
       ],
       conclusion:
-        'El Período sí depende de la gravedad: a menor g, mayor T. En la Luna (g = 1,62 m/s²) el mismo péndulo tarda cerca de 4,937 s, frente a 2,007 s en la Tierra.',
+        'El Período sí depende de la gravedad: a menor g, mayor T. En la Luna (g = 1,62 m/s²) el mismo péndulo tarda cerca de 4,946 s, frente a 2,011 s en la Tierra (con L = 1 m y φ₀ = 10°).',
     },
     {
       id: 'depende-del-angulo',
@@ -262,35 +341,40 @@ export const simplePendulumContent: LabContent = {
       },
       steps: [
         {
-          instruction: "Presiona 'Preparar valores': φ₀ = 10°. Anota el Período T.",
-          prepareParams: { L: 1, phi0: 10, g: 9.8, m: 0.5 },
+          instruction: "Presiona 'Preparar valores': φ₀ = 10°, L = 1 m, g = 9,8 m/s². Anota el Período T.",
+          prepareParams: { L: 1, phi0: 10, g: 9.8, m: 0.5, b: 0 },
           highlightResultKey: 'T',
         },
         {
-          instruction: 'Cambia el Ángulo inicial φ₀ a 30°.',
+          instruction: 'Cambia el Ángulo inicial φ₀ a 60°, sin tocar L ni g.',
           highlightParamKey: 'phi0',
         },
         {
-          instruction: 'Mira el Período T y el aviso que aparece sobre el modelo.',
+          instruction:
+            'Compara el nuevo Período T con el que anotaste. Luego mira la gráfica: la curva punteada (aproximación lineal) se va separando de la curva azul (la simulación real). Lee también el aviso sobre el modelo.',
           highlightResultKey: 'T',
         },
       ],
       check: [
         {
-          question: 'En esta simulación, ¿cambió el Período T al pasar de φ₀ = 10° a φ₀ = 30°?',
+          question: 'Al pasar de φ₀ = 10° a φ₀ = 60° (con L y g iguales), ¿qué le pasó al Período T?',
           options: [
-            { id: 'si', label: 'Sí, cambió' },
-            { id: 'no', label: 'No, el número no cambió' },
+            { id: 'igual', label: 'No cambió' },
+            { id: 'poco', label: 'Aumentó un poco (menos de un 10 %)' },
+            { id: 'mucho', label: 'Aumentó mucho (se duplicó o más)' },
           ],
-          correctOptionId: 'no',
+          correctOptionId: 'poco',
           feedback: {
-            si: 'Revisa de nuevo el número de T: en esta simulación no cambia con el ángulo, porque usa el modelo simplificado de ángulo pequeño.',
-            no: 'Correcto: en este modelo T no depende del ángulo. Pero el aviso te dice que un péndulo REAL con φ₀ = 30° tardaría cerca de un 1,7 % más — por eso el modelo deja de ser exacto por encima de 15°.',
+            igual:
+              'Revisa de nuevo el número de T: pasó de 2,011 s a 2,154 s. Con ángulos grandes el período real sí aumenta, y por eso la curva punteada se separa de la simulación.',
+            poco: 'Correcto: T aumentó cerca de un 7 % (de 2,011 s a 2,154 s). Es un cambio pequeño, pero suficiente para que la curva punteada de ángulo pequeño se separe de la simulada.',
+            mucho:
+              'No tanto: T pasó de 2,011 s a 2,154 s, cerca de un 7 % más. Cambia, pero solo un poco, incluso con 60°.',
           },
         },
       ],
       conclusion:
-        'En el modelo de ángulo pequeño que usa esta simulación, el Período no cambia con φ₀. El aviso que aparece con φ₀ > 15° te recuerda que un péndulo real sí cambiaría un poco (cerca de 1,7 % a 30°), porque ya no se cumple la aproximación.',
+        'El Período cambia solo un poco con el ángulo: con L = 1 m y g = 9,8 m/s², T pasa de 2,011 s (10°) a 2,154 s (60°), cerca de un 7 % más. Por eso la fórmula T₀ = 2π√(L/g) y la curva punteada solo valen para ángulos pequeños: con φ₀ = 60° el período real es 7,3 % mayor que T₀.',
     },
   ],
 };

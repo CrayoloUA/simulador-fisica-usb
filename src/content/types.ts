@@ -1,8 +1,16 @@
+import type { PendulumModel } from '../engine/phenomena/pendulum';
 import type { Params } from '../engine/types';
 
 export interface ParamHelp {
   paramKey: string;
-  explanation: string;
+  /** De dónde sale el valor (cómo se mide o se elige). */
+  origin: string;
+  /** Para qué sirve dentro del modelo. */
+  role: string;
+  /** Qué pasa con el experimento si se cambia u omite. */
+  effect: string;
+  /** Aviso corto que se muestra siempre junto al control (no solo al abrir la ayuda). */
+  note?: string;
 }
 
 export interface PresetValue {
@@ -57,7 +65,20 @@ export interface Experiment {
   conclusion: string;
 }
 
+/** Teoría que acompaña a cada modelo del péndulo: ecuaciones y explicaciones (HU-14, 16, 17). */
+export interface ModelTheory {
+  title: string;
+  equations: string[];
+  /** Cuándo es válido el modelo y qué pasa con ángulos grandes. */
+  validity: string;
+  /** De dónde sale cada curva de la gráfica y, si aplica, por qué se separan. */
+  chartOrigin: string;
+  /** Eje de referencia y signo del ángulo. */
+  signConvention: string;
+}
+
 export interface LabContent {
+  theoryByModel: Record<PendulumModel, ModelTheory>;
   paramHelp: ParamHelp[];
   presets: Record<string, PresetValue[]>;
   resultHelp: ResultHelp[];

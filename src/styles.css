@@ -359,3 +359,114 @@ button[aria-disabled='true'] {
   background: #fee2e2;
   border-left: 4px solid var(--danger);
 }
+
+/* Iteración 2: selector de modelo, aviso informativo y botón de la aproximación lineal. */
+.model-selector h2 {
+  margin: 0 0 4px;
+}
+
+.model-selector .mode-switch {
+  margin-top: 4px;
+}
+
+.mode-switch button {
+  min-height: 44px;
+}
+
+.range-note {
+  margin: 6px 0 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.banner-info {
+  background: #eff6ff;
+  border-left-color: var(--accent);
+}
+
+.chart-controls {
+  margin: 12px 0 8px;
+}
+
+.linear-toggle {
+  min-height: 44px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.linear-toggle[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+/* Iteración 2: panel de teoría bajo la gráfica. */
+.column {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  align-content: start;
+}
+
+.theory {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.theory h2 {
+  margin: 0 0 8px;
+}
+
+.equation {
+  margin: 6px 0;
+  padding: 6px 10px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  font-family: Cambria, Georgia, serif;
+  font-size: 1.05rem;
+  overflow-x: auto;
+}
+
+.theory-numbers {
+  margin: 8px 0 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.theory details {
+  border-top: 1px solid var(--border);
+}
+
+.theory summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 12px 0;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.theory details p {
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+/* Iteración 2: ayuda de parámetros en tres textos y aviso permanente de la masa. */
+.help-card p {
+  margin: 0 0 8px;
+}
+
+.help-card p:last-child {
+  margin-bottom: 0;
+}
+
+.param-note {
+  margin: 4px 0 6px;
+  padding: 6px 10px;
+  background: #eff6ff;
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
