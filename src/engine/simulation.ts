@@ -8,6 +8,9 @@ export interface SimulationOptions {
   maxSamples?: number;
 }
 
+/** Mayor velocidad que acepta el motor (la interfaz ofrece hasta 2×). */
+const MAX_TIME_SCALE = 4;
+
 function allFinite(record: Record<string, number>): boolean {
   for (const key in record) if (!Number.isFinite(record[key])) return false;
   return true;
@@ -54,7 +57,12 @@ export class Simulation {
 
   advance(elapsedSeconds: number): void {
     if (this.error) return;
-    this.accumulator += Math.min(elapsedSeconds, this.maxFrameTime) * this.timeScale;
+    // Ni el reloj ni la escala se pueden fiar: la escala viene de un control del HTML (que se puede
+    // manipular) y un NaN en el acumulador lo congelaría para siempre. El tope de escala acota
+    // además los pasos por cuadro (un cuelgue por bucle larguísimo).
+    const elapsed = Number.isFinite(elapsedSeconds) ? Math.max(0, elapsedSeconds) : 0;
+    const scale = Number.isFinite(this.timeScale) ? Math.min(Math.max(0, this.timeScale), MAX_TIME_SCALE) : 1;
+    this.accumulator += Math.min(elapsed, this.maxFrameTime) * scale;
     while (this.accumulator >= this.dt) {
       this.step();
       if (this.error) return;

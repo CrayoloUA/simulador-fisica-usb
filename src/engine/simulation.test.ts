@@ -143,3 +143,38 @@ describe('Simulation: guarda numérica', () => {
     expect(sim.error).toBeNull();
   });
 });
+
+describe('Simulation: entradas hostiles al avance (ataque de la Fase 9)', () => {
+  it('una escala de tiempo enorme no ejecuta millones de pasos: el avance por cuadro tiene tope', () => {
+    const sim = new Simulation(simplePendulum, params);
+    sim.timeScale = 20_000; // p. ej. un <option value> manipulado en el selector de velocidad
+    const inicio = performance.now();
+    sim.advance(0.1);
+    expect(performance.now() - inicio).toBeLessThan(250);
+    expect(sim.t).toBeLessThanOrEqual(0.1 * 4 + 1e-9);
+  });
+
+  it('una escala NaN o infinita no envenena la simulación: después sigue avanzando con normalidad', () => {
+    for (const mala of [NaN, Infinity, -Infinity, -3]) {
+      const sim = new Simulation(simplePendulum, params);
+      sim.timeScale = mala;
+      sim.advance(0.1);
+      sim.timeScale = 1;
+      sim.advance(0.1);
+      expect(sim.error).toBeNull();
+      expect(sim.t).toBeGreaterThan(0.09);
+    }
+  });
+
+  it('un tiempo transcurrido NaN, infinito o negativo no envenena el acumulador ni retrocede el tiempo', () => {
+    for (const malo of [NaN, Infinity, -Infinity, -5]) {
+      const sim = new Simulation(simplePendulum, params);
+      sim.advance(malo);
+      const tras = sim.t;
+      expect(tras).toBeGreaterThanOrEqual(0);
+      expect(tras).toBeLessThanOrEqual(0.1 + 1e-9);
+      sim.advance(0.1);
+      expect(sim.t).toBeGreaterThan(tras + 0.09);
+    }
+  });
+});

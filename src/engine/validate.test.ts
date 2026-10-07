@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ParamSpec } from './types';
-import { defaultParams, validateParams } from './validate';
+import { clampToSpec, defaultParams, validateParams } from './validate';
 
 const schema: ParamSpec[] = [
   { key: 'L', label: 'Longitud', symbol: 'L', unit: 'm', min: 0.1, max: 5, step: 0.1, defaultValue: 1 },
@@ -35,6 +35,39 @@ describe('validateParams', () => {
   it('trata una clave ausente como no numérica', () => {
     const result = validateParams(schema, { g: '9,8' });
     expect(result.errors.L).toBe('L debe ser un número');
+  });
+});
+
+describe('clampToSpec (valores que llegan de un control manipulado)', () => {
+  const spec: ParamSpec = {
+    key: 'phi0',
+    label: 'Ángulo',
+    symbol: 'φ₀',
+    unit: '°',
+    min: 1,
+    max: 60,
+    step: 1,
+    defaultValue: 10,
+  };
+
+  it('deja intacto un valor dentro del rango', () => {
+    expect(clampToSpec(spec, 30)).toBe(30);
+    expect(clampToSpec(spec, 1)).toBe(1);
+    expect(clampToSpec(spec, 60)).toBe(60);
+  });
+
+  it('recorta lo que se sale del rango al extremo más cercano', () => {
+    expect(clampToSpec(spec, 123_456_789)).toBe(60);
+    expect(clampToSpec(spec, -5)).toBe(1);
+    expect(clampToSpec(spec, 0)).toBe(1);
+    expect(clampToSpec(spec, 1e308)).toBe(60);
+    expect(clampToSpec(spec, -1e308)).toBe(1);
+  });
+
+  it('infinitos se recortan; NaN vuelve al valor por defecto', () => {
+    expect(clampToSpec(spec, Infinity)).toBe(60);
+    expect(clampToSpec(spec, -Infinity)).toBe(1);
+    expect(clampToSpec(spec, NaN)).toBe(10);
   });
 });
 

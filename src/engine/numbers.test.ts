@@ -21,6 +21,23 @@ describe('parseDecimal', () => {
   });
 });
 
+describe('parseDecimal con entradas hostiles', () => {
+  it('rechaza de inmediato una cadena enorme (no depende del backtracking de la regex)', () => {
+    const hostil = `${'1'.repeat(200_000)}x`;
+    const inicio = performance.now();
+    expect(parseDecimal(hostil)).toBeNull();
+    expect(performance.now() - inicio).toBeLessThan(50);
+  });
+
+  it('rechaza más de 32 caracteres aunque sean dígitos válidos', () => {
+    expect(parseDecimal('1'.repeat(33))).toBeNull();
+  });
+
+  it('sigue aceptando números normales largos pero razonables', () => {
+    expect(parseDecimal('0,123456789012345678')).toBeCloseTo(0.123456789012345678, 15);
+  });
+});
+
 describe('formatNumber', () => {
   it('usa coma decimal', () => {
     expect(formatNumber(0.1)).toBe('0,1');
