@@ -47,3 +47,50 @@ Se corrigieron todos los hallazgos con impacto real y bajo costo de arreglo. Los
 - **Riesgos o pendientes:** los de la tabla de deuda técnica; la rama sigue sin fusionar (brecha 1 de `docs/A-auditoria.md`).
 
 ¿Apruebas la Fase 6? Puedes decir `ajustar`, o `fase 7` para seguir con rendimiento, accesibilidad y SEO.
+
+---
+
+# Fase 6 — Iteración 2 (2026-10-06): modos, fricción y teoría
+
+- **Alcance:** árbol de trabajo sin commitear (S0 a S5 más las ecuaciones del profesor): `engine/phenomena/dampedLinear.ts`, `pendulum.ts`, `engine/modelSwitch.ts`, `ui/ModelSelector.tsx`, `LinearizationToggle.tsx`, `TheoryPanel.tsx`, y los cambios en `App.tsx`, `SimulationView.tsx`, `ParamControl.tsx`, `drawChart.ts`, `drawPendulum.ts`, contenido y estilos.
+- **Método:** cuatro agentes de solo lectura en paralelo (`code-reviewer`, `typescript-reviewer`, `react-reviewer`, `pr-test-analyzer`); yo apliqué las correcciones con pruebas primero. No se despachó `silent-failure-hunter` ni `type-design-analyzer` (el código nuevo no tiene `catch` ni tipos complejos nuevos).
+- **Resultado:** 0 hallazgos altos. Medios y bajos abajo.
+
+## Hallazgos corregidos
+
+| # | Sev. | Hallazgo | Corrección |
+|---|---|---|---|
+| 1 | Media | El experimento "¿Y del ángulo?" pide 60° y era inalcanzable en modo lineal (máx. 15°) | `LabContent.experimentModel = 'no-lineal'`; al elegir un experimento la app pasa a ese modelo. Pruebas de contenido que verifican que los valores caben en su esquema |
+| 2 | Media | Cambiar de modelo no se anunciaba (y cerraba el experimento en silencio) | `describeModelChange` (pura, con 2 pruebas): siempre dice el modelo activo y que se reinició, y suma el ajuste de φ₀ y el cierre del experimento |
+| 3 | Media | `T` y `f` ignoran la fricción (hasta 12 % cortos en el peor caso de b) | Decisión M5 sostenida y ahora explícita: la ayuda de T y f dice "sin fricción". Prueba de contenido |
+| 4 | Media | Comentario "no es destructivo" falso en `ModelSelector` | Comentario corregido (reinicia y cierra el experimento); el anuncio del punto 2 lo compensa |
+| 5 | Baja | `aria-controls` apuntaba a un id inexistente con la ayuda cerrada | El panel de ayuda siempre existe y usa `hidden` |
+| 6 | Baja | Nombre repetido en el selector (región y grupo) | Un solo nombre en el grupo (`aria-labelledby`) |
+| 7 | Baja | `summary` sin anillo de foco propio | `summary:focus-visible` |
+| 8 | Baja | La etiqueta de la gráfica mencionaba la punteada aunque estuviera oculta | Etiqueta según `showLinear` |
+| 9 | Baja | `ResultsPanel` sin guarda para claves ausentes (p. ej. `tau`) | Muestra "—" |
+| 10 | Baja | Dependencia `phenomenon` faltante en un efecto | Añadida |
+| 11 | Baja | Huecos de pruebas: `switchModel` (vacío, máximo exacto, máximo decimal con unidad), peor caso del esquema contra RK4, aserción débil de la gráfica | 7 pruebas nuevas; el aviso de `switchModel` ahora separa la unidad ("2,5 m") |
+
+## Deuda técnica aceptada (baja)
+
+| Hallazgo | Por qué se deja |
+|---|---|
+| `noUncheckedIndexedAccess` desactivado (`Params` es `Record<string, number>`) | Activarlo toca todo el motor; el riesgo real es una clave mal escrita, que hoy cubren las pruebas. Mejor como tarea propia |
+| Teclado de flechas duplicado entre `ModelSelector` y el selector de modo | Dos usos, 20 líneas; extraer un hook queda para cuando haya un tercero |
+| `tau` y `energy` se calculan pero la UI no los muestra | `tau` está probado y planeado; la energía se explica en la ayuda de la masa. Mostrarlos sería una historia nueva |
+| Estado derivado (`params`) dentro de un efecto: un fotograma de desfase | Sin efecto visible en las comprobaciones; reescribirlo con `useMemo` arriesga más de lo que corrige |
+| Sin pruebas de componentes ni E2E | Vitest corre solo en `node`; el flujo de `App` (cambio de modelo, experimento, aviso) se verificó a mano en el navegador y se cubre en la Fase 10 |
+
+## Verificación
+
+| Comprobación | Resultado |
+|---|---|
+| `npm run typecheck` | Sin errores |
+| `npx vitest run` | 12 archivos, **163 pruebas** en verde (83 al empezar la iteración) |
+| Cobertura (`src/engine` y módulos medidos) | 98,6 % sentencias, 93,7 % ramas, 100 % funciones; motor 98,2 % / 92,1 % (umbral del PRD: ≥ 90 %) |
+| `npm run build` | Correcto |
+| `npm audit` | 0 vulnerabilidades |
+| Navegador | Elegir un experimento desde el modo lineal pasa a no lineal; volver a lineal anuncia "Se cerró el experimento en curso"; ayuda cerrada oculta; un solo nombre en el selector |
+
+**Compuerta de la fase:** cero hallazgos altos abiertos → cumplida.

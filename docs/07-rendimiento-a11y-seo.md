@@ -61,3 +61,43 @@ Lighthouse SEO 82 → 100. Se corrigieron los fallos reales: meta description, `
 - **Evidencia:** tabla de mediciones arriba; `tsc` limpio, 56 pruebas en 8 archivos, build de 77,2 KB gzip.
 
 ¿Apruebas la Fase 7? Puedes decir `ajustar`, o `fase 8` para seguir con seguridad defensiva.
+
+---
+
+## Iteración 2 (2026-10-07): modos lineal/no lineal, fricción, teoría y rediseño
+
+- **Qué se midió:** el build de producción (`vite preview`) ya con el rediseño (tokens, fuentes IBM Plex y Literata, iconos, panel de teoría y "Más opciones"). Mismas condiciones que la primera medición: CPU 4x más lenta, viewport móvil de 375 px y, para el LCP, Slow 4G.
+- **Aviso sobre el LCP:** en esta máquina el LCP estrangulado varió entre ejecuciones (2,3 s, 2,5 s, 3,5 s y algunas trazas con la máquina cargada por encima de 5 s). Se reporta la medición limpia y el rango, no una cifra única.
+
+| Métrica | Fase 7 original | Iteración 2 |
+|---|---|---|
+| fps en pausa (CPU 4x) | 60,2 | **60,1** |
+| fps simulando (CPU 4x) | 58,2 | **59,9** (p95 16,8 ms) |
+| Tareas largas (>50 ms) en 5 s | 1 (64 ms) | **0** |
+| LCP con CPU 4x + Slow 4G | 2 844 ms | **2 328 ms** (rango observado 2,3–3,5 s) |
+| CLS | 0,00 | **0,00** |
+| Lighthouse accesibilidad / buenas prácticas / SEO | 100 / 100 / 100 | **100 / 100 / 100** (móvil y escritorio) |
+| Objetivos táctiles < 24 px (sin contar deslizadores) | — | **0** |
+| Scroll horizontal a 375 px | — | **ninguno** |
+| Elementos del DOM | — | 177 |
+| JS gzip | 77,2 KB | **95,9 KB** (+18,7 KB) |
+| CSS gzip | — | 5,7 KB |
+| Fuentes cargadas (WOFF2) | 0 | 119 KB (Plex 48 KB precargadas; Literata 71 KB bajo demanda, `font-display: swap`) |
+| Pruebas / typecheck / `npm audit` | 56 / limpio / — | **282 en verde** / limpio / **0 vulnerabilidades** |
+
+### Lectura de los resultados
+- **Rendimiento:** sin regresión. El escenario de calidad (≥ 30 fps en un equipo de colegio de gama baja) se cumple con casi el doble de margen. El LCP es el texto (`<p>`), no una fuente ni una imagen; las fuentes llegan después y se intercambian sin desplazar el diseño (CLS 0).
+- **Peso:** el JS creció 18,7 KB gzip por el motor de dos modelos, la teoría, la ayuda y los iconos. Es el único cambio de coste visible; no se optimizó porque el LCP no empeoró.
+- **Accesibilidad (WCAG 2.2 AA):**
+  - Contrastes calculados de la paleta nueva: texto ≥ 5,2:1; curva punteada 3,22:1 y borde de componentes 4,33:1 (ambos sobre el 3:1 de la 1.4.11).
+  - Selector de velocidad: medía 19 px de alto, ahora cumple los 24 px de la 2.5.8 (corregido en la iteración).
+  - Los deslizadores (16 px) quedan cubiertos por la excepción de control equivalente: cada uno tiene su campo de texto.
+  - Lighthouse 100 en accesibilidad. Sigue sin probarse con un lector de pantalla real.
+- **SEO:** sin cambios. `llms.txt` sigue sin agregarse (único fallo en "Agentic Browsing", 67).
+
+### Pendientes de esta iteración
+- Probar con un lector de pantalla real (NVDA) los controles nuevos: selector de modelo, botón de la aproximación lineal y avisos de cambio de modelo.
+- Las cifras de contraste son calculadas, no medidas con una herramienta externa.
+- El texto de `index.html` y el JSON-LD no mencionan aún los dos modelos ni la fricción; es opcional y no afecta a las puntuaciones.
+- Reducir el ruido de `aria-live` en los resultados (deuda de la Fase 7 original).
+- Si el JS vuelve a crecer, mirar división de código del panel de teoría.
