@@ -49,9 +49,25 @@
     </script>
   </head>
   <body>
+    <!-- Sin JavaScript no se carga el CSS de la aplicación (Vite lo inyecta desde el módulo): estos estilos viven
+         aquí, con colores de respaldo y fuentes del sistema, para que el aviso se lea bien igualmente. -->
     <noscript>
-      Este simulador de física (péndulo simple, para estudiantes de 10° y 11°) necesita JavaScript habilitado para
-      funcionar. Actívalo en tu navegador y recarga la página.
+      <style>
+        body { margin: 0; background: #f9f7f1; color: #141a29; font: 18px/1.55 system-ui, 'Segoe UI', sans-serif; }
+        .nojs { max-width: 560px; margin: 12vh auto 0; padding: 0 20px; }
+        .nojs .card { background: #fdfcf9; border: 1px solid #6d7584; border-radius: 8px; padding: 24px 28px; }
+        .nojs h1 { font: 600 28px/1.25 Georgia, 'Times New Roman', serif; margin: 0 0 12px; }
+        .nojs p { margin: 0 0 12px; }
+        .nojs p:last-child { margin: 0; color: #3b4253; }
+      </style>
+      <main class="nojs">
+        <div class="card" role="alert">
+          <h1>Simulador de Fenómenos Físicos</h1>
+          <p>Este simulador de física, para estudiantes de 10° y 11°, necesita <b>JavaScript habilitado</b> para funcionar.</p>
+          <p>Actívalo en tu navegador y recarga la página.</p>
+          <p>Si usas un computador del colegio y no puedes cambiarlo, pide ayuda a tu profesor.</p>
+        </div>
+      </main>
     </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

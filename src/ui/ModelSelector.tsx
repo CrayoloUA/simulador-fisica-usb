@@ -1,5 +1,5 @@
 import type { PendulumModel } from '../engine/phenomena/pendulum';
-import { MODEL_LABELS, MODEL_ORDER, modelNote } from './kidLabels';
+import { MODEL_CHANGE_WARNING, MODEL_LABELS, MODEL_ORDER, modelNote } from './kidLabels';
 import { Segmented } from './Segmented';
 
 interface Props {
@@ -12,8 +12,9 @@ interface Props {
 /**
  * "Cómo se calcula": Ángulo pequeño o Real, con una línea que explica el elegido. Es un grupo de
  * radio (selección única y reversible; las flechas eligen). Ojo: cambiar de modelo reinicia la
- * simulación y cierra el experimento en curso; por eso `App` siempre lo anuncia en la región de
- * estado (ver `describeModelChange`).
+ * simulación y cierra el experimento en curso; por eso la nota que describe el grupo lo avisa ANTES
+ * de elegir (aria-describedby) y `App` siempre lo anuncia después en la región de estado (ver
+ * `describeModelChange`).
  */
 export function ModelSelector({ model, onChange, maxPhi0 }: Props) {
   return (
@@ -23,11 +24,14 @@ export function ModelSelector({ model, onChange, maxPhi0 }: Props) {
         name="modelo"
         className="choice"
         labelledBy="h-calc"
+        describedBy="note-calc"
         value={model}
         onChange={onChange}
         options={MODEL_ORDER.map((id) => ({ value: id, label: MODEL_LABELS[id] }))}
       />
-      <p className="note">{modelNote(model, maxPhi0)}</p>
+      <p id="note-calc" className="note">
+        {modelNote(model, maxPhi0)} {MODEL_CHANGE_WARNING}
+      </p>
     </>
   );
 }

@@ -6,18 +6,23 @@ import { describeModelChange, switchModel } from './engine/modelSwitch';
 import { formatNumber } from './engine/numbers';
 import { pendulumModels, type PendulumModel } from './engine/phenomena/pendulum';
 import type { Params } from './engine/types';
-import { defaultParams } from './engine/validate';
-import { ExperimentPanel } from './ui/ExperimentPanel';
+import { clampToSpec, defaultParams } from './engine/validate';
+import { modeAnnouncement, runAnnouncement } from './ui/announcements';
+import { escapeClosesDrawer } from './ui/escapeScope';
+import { EXPERIMENT_START_SPEED, paramsForExperimentStart } from './ui/experimentEntry';
 import { buildHelpEntries } from './ui/helpEntries';
 import { LAB_TITLE, MAIN_PARAM_KEYS, MODEL_LABELS, MODES, type Mode } from './ui/kidLabels';
-import { stepNeedsDrawer } from './ui/lessonLayout';
+import { LessonCard } from './ui/LessonCard';
+import { lessonInlineItems, presetsVisible } from './ui/lessonLayout';
 import { describeModelNotice } from './ui/modelNotice';
 import { MoreOptions } from './ui/MoreOptions';
 import { ParamControl } from './ui/ParamControl';
 import { ResultsPanel } from './ui/ResultsPanel';
 import { Segmented } from './ui/Segmented';
 import { SimulationView } from './ui/SimulationView';
+import { StepInlineItems } from './ui/StepInlineItems';
 import { TheoryPanel } from './ui/TheoryPanel';
+import { useMediaQuery } from './ui/useMediaQuery';
 
 const DEFAULT_MODEL: PendulumModel = 'no-lineal';
 const content = simplePendulumContent;
@@ -36,7 +41,11 @@ export default function App() {
   const [showLinear, setShowLinear] = useState(false);
   // Anuncio completo del cambio de modelo (solo lectores de pantalla) y, aparte, el máximo de φ₀
   // al que se ajustó el ángulo: ese dato sí se ve, en el aviso.
-  const [announcement, setAnnouncement] = useState<string | null>(null);
+  // El `id` cambia en cada anuncio: así el lector repite uno aunque el texto sea igual al anterior
+  // (p. ej. Reiniciar dos veces seguidas).
+  const [announcement, setAnnouncement] = useState<{ text: string; id: number } | null>(null);
+  const announceSeq = useRef(0);
+  const announce = (text: string | null) => setAnnouncement(text === null ? null : { text, id: ++announceSeq.current });
   const [adjustedTo, setAdjustedTo] = useState<number | null>(null);
   const [params, setParams] = useState<Params>(() => defaultParams(pendulumModels[DEFAULT_MODEL].paramSchema));
   const [running, setRunning] = useState(false);
@@ -51,10 +60,10 @@ export default function App() {
   const moreButton = useRef<HTMLButtonElement>(null);
   const drawerTitle = useRef<HTMLHeadingElement>(null);
   const noticeText = useRef<HTMLParagraphElement>(null);
-  // El foco pasa al cajón solo si lo abrió el estudiante; si se abrió solo (un paso del
-  // experimento), el foco se queda donde estaba.
+  // El foco pasa al cajón solo si lo abrió el estudiante con el botón.
   const focusDrawerOnOpen = useRef(false);
   const theoryOpener = useRef<HTMLElement | null>(null);
+  const isNarrow = useMediaQuery(NARROW_QUERY);
 
   const mainSpecs = phenomenon.paramSchema.filter((spec) => MAIN_PARAM_KEYS.includes(spec.key));
   const drawerSpecs = phenomenon.paramSchema.filter((spec) => !MAIN_PARAM_KEYS.includes(spec.key));
@@ -75,10 +84,16 @@ export default function App() {
       ? activeExperiment.steps[flowState.stepIndex]
       : undefined;
 
-  // Si el paso resalta algo que vive en "Más opciones", el cajón se abre solo para que se vea.
-  useEffect(() => {
-    if (stepNeedsDrawer(currentStep)) setDrawerOpen(true);
-  }, [currentStep]);
+  const inExperiments = mode === 'experimentos';
+  // En Experimentos no hay cajón: lo que el paso pide mirar y vive en él va dentro de la lección.
+  const inlineItems = lessonInlineItems(currentStep);
+
+  /** Al pasar a Experimentos el cajón se cierra: ahí no existe, y no debe quedar abierto al volver. */
+  const handleModeChange = (next: Mode) => {
+    if (next === 'experimentos') setDrawerOpen(false);
+    setMode(next);
+    announce(modeAnnouncement(next));
+  };
 
   const openDrawer = () => {
     focusDrawerOnOpen.current = true;
@@ -103,8 +118,10 @@ export default function App() {
     }
   }, [drawerOpen]);
 
-  const openTheory = () => {
-    theoryOpener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  // Se guarda el botón que abrió la hoja (no `document.activeElement`: en Safari y Firefox de macOS,
+  // tras un clic con ratón el foco queda en <body>).
+  const openTheory = (opener: HTMLElement) => {
+    theoryOpener.current = opener;
     setTheoryOpen(true);
   };
 
@@ -121,7 +138,7 @@ export default function App() {
       if (theoryOpen) {
         setTheoryOpen(false);
         event.preventDefault();
-      } else if (drawerOpen) {
+      } else if (drawerOpen && escapeClosesDrawer(document.activeElement, document.getElementById('drawer'), moreButton.current)) {
         closeDrawer();
         event.preventDefault();
       }
@@ -135,7 +152,7 @@ export default function App() {
     const nextSchema = pendulumModels[next].paramSchema;
     const adjusted = switchModel({ raw: paramsToRaw(params), params, nextSchema });
     setParams(adjusted.params);
-    setAnnouncement(
+    announce(
       describeModelChange({
         adjustedNotice: adjusted.notice,
         modelName: MODEL_LABELS[next],
@@ -160,6 +177,12 @@ export default function App() {
     if (model !== content.experimentModel) changeModel(content.experimentModel, false);
     // Las lecciones hablan de la curva punteada: se deja a la vista desde el principio.
     setShowLinear(true);
+    // Empieza limpio: sin simulación en marcha y sin rozamiento, masa ni velocidad heredados de
+    // Explorar, que en Experimentos el niño no ve ni puede cambiar.
+    setRunning(false);
+    setResetToken((t) => t + 1);
+    setSpeed(EXPERIMENT_START_SPEED);
+    setParams((prev) => paramsForExperimentStart(prev, phenomenon.paramSchema));
     setExperimentId(id);
     setFlowState(initialFlowState(experiment));
   };
@@ -175,9 +198,12 @@ export default function App() {
   };
 
   const handleParamChange = (key: string, value: number) => {
-    setAnnouncement(null);
+    announce(null);
     setAdjustedTo(null);
-    setParams((prev) => ({ ...prev, [key]: value }));
+    // El estado no se fía del control: sus min/max se pueden alterar desde el navegador.
+    const spec = phenomenon.paramSchema.find((s) => s.key === key);
+    const safe = spec ? clampToSpec(spec, value) : value;
+    setParams((prev) => ({ ...prev, [key]: safe }));
   };
 
   const handlePrepare = (values: Partial<Params>) => {
@@ -198,25 +224,43 @@ export default function App() {
 
   const handlePlay = () => {
     if (simError) return;
-    setRunning((r) => !r);
+    announce(runAnnouncement(running ? 'pause' : 'play'));
+    setRunning(!running);
   };
 
   const handleReset = () => {
     setRunning(false);
     setResetToken((t) => t + 1);
+    announce(runAnnouncement('reset'));
   };
 
   // El botón del aviso desaparece al activar la comparación: el foco pasa al texto del aviso.
   const handleShowComparison = () => {
     setShowLinear(true);
-    setAnnouncement('Comparación activada: la curva punteada muestra el ángulo pequeño.');
+    announce('Comparación activada: la curva punteada muestra el ángulo pequeño.');
     requestAnimationFrame(() => noticeText.current?.focus());
   };
+
+  // Play y Reiniciar. En escritorio van arriba de la columna y primero en el DOM; en el celular son
+  // una barra fija abajo y van al final del DOM: así el orden de Tab es el orden visual en los dos.
+  const actionsBar = (
+    <div className="actions">
+      {/* aria-disabled y no disabled: el botón conserva el foco y el lector lo anuncia. */}
+      <button type="button" className="btn play" aria-disabled={simError !== null} onClick={handlePlay}>
+        {running ? <Pause className="ic" weight="fill" aria-hidden="true" /> : <Play className="ic" weight="fill" aria-hidden="true" />}
+        {running ? 'Pausa' : <span lang="en">Play</span>}
+      </button>
+      <button type="button" className="btn sec" onClick={handleReset}>
+        <ArrowCounterClockwise className="ic" weight="bold" aria-hidden="true" />
+        Reiniciar
+      </button>
+    </div>
+  );
 
   return (
     <>
       {/* Con la hoja de Teoría abierta, el fondo queda inert: ni foco ni lector de pantalla. */}
-      <main className="app" data-modo={mode} data-drawer={drawerOpen ? 'open' : 'closed'} inert={theoryOpen}>
+      <main className="app" data-modo={mode} data-drawer={drawerOpen && !inExperiments ? 'open' : 'closed'} inert={theoryOpen}>
         <header className="top">
           <h1>{LAB_TITLE}</h1>
           <Segmented
@@ -224,7 +268,7 @@ export default function App() {
             className="modes"
             ariaLabel="Modo de uso"
             value={mode}
-            onChange={setMode}
+            onChange={handleModeChange}
             options={MODES.map((option) => ({ value: option.id, label: option.label }))}
           />
         </header>
@@ -240,37 +284,35 @@ export default function App() {
         />
 
         <aside className="aside" aria-label="Controles y resultados">
-          <div className="actions">
-            {/* aria-disabled y no disabled: el botón conserva el foco y el lector lo anuncia. */}
-            <button type="button" className="btn play" aria-disabled={simError !== null} onClick={handlePlay}>
-              {running ? <Pause className="ic" weight="fill" aria-hidden="true" /> : <Play className="ic" weight="fill" aria-hidden="true" />}
-              {running ? 'Pausa' : 'Play'}
-            </button>
-            <button type="button" className="btn sec" onClick={handleReset}>
-              <ArrowCounterClockwise className="ic" weight="bold" aria-hidden="true" />
-              Reiniciar
-            </button>
-          </div>
+          {inExperiments && (
+            <LessonCard
+              experiments={content.experiments}
+              experiment={activeExperiment}
+              flow={flowState}
+              inlineItems={
+                <StepInlineItems
+                  items={inlineItems}
+                  specs={phenomenon.paramSchema}
+                  params={params}
+                  presets={content.presets}
+                  results={results}
+                  onParamChange={handleParamChange}
+                />
+              }
+              onSelectExperiment={handleSelectExperiment}
+              onPredict={(optionId) => setFlowState((state) => (state ? predict(state, optionId) : state))}
+              onAnswerCheck={(optionId) => setFlowState((state) => (state ? answerCheck(state, optionId) : state))}
+              onAdvance={handleAdvanceFlow}
+              onPrepare={handlePrepare}
+              onExit={handleExitExperiment}
+            />
+          )}
+          {!isNarrow && actionsBar}
           <div className="aside-scroll">
             {simError && (
               <div className="alert" role="alert">
                 <XCircle className="ic" weight="bold" aria-hidden="true" />
                 <p>{simError} Presiona Reiniciar para volver a empezar.</p>
-              </div>
-            )}
-            {mode === 'experimentos' && (
-              <div className="lesson">
-                <ExperimentPanel
-                  content={content}
-                  activeExperiment={activeExperiment}
-                  flowState={flowState}
-                  onSelectExperiment={handleSelectExperiment}
-                  onPredict={(optionId) => setFlowState((state) => (state ? predict(state, optionId) : state))}
-                  onAnswerCheck={(optionId) => setFlowState((state) => (state ? answerCheck(state, optionId) : state))}
-                  onAdvance={handleAdvanceFlow}
-                  onPrepare={handlePrepare}
-                  onExit={handleExitExperiment}
-                />
               </div>
             )}
             <div className="params">
@@ -279,16 +321,17 @@ export default function App() {
                   key={spec.key}
                   spec={spec}
                   value={params[spec.key]}
-                  presets={content.presets[spec.key]}
+                  presets={presetsVisible(inExperiments, currentStep) ? content.presets[spec.key] : undefined}
                   highlighted={currentStep?.highlightParamKey === spec.key}
+                  showNote={!inExperiments}
                   onChange={(value) => handleParamChange(spec.key, value)}
                 />
               ))}
             </div>
             <ResultsPanel results={results} highlightedKey={currentStep?.highlightResultKey} />
-            {/* La región de estado existe siempre; los avisos entran y salen de su interior, lo que
-                permite que el lector de pantalla los anuncie. */}
-            <div className="status" role="status">
+            {/* El aviso visible no es región viva: lleva el porcentaje exacto, que cambia con el
+                deslizador y se leería en cada paso. */}
+            <div className="status">
               {modelNotice && (
                 <div className="notice" data-kind={modelNotice.kind}>
                   <Warning className="ic" weight="bold" aria-hidden="true" />
@@ -304,44 +347,52 @@ export default function App() {
                   </div>
                 </div>
               )}
-              {announcement && <span className="sr-only">{announcement}</span>}
             </div>
-            <div className="more">
-              <button
-                ref={moreButton}
-                type="button"
-                className="btn sec"
-                aria-expanded={drawerOpen}
-                aria-controls="drawer"
-                onClick={() => (drawerOpen ? closeDrawer() : openDrawer())}
-              >
-                <SlidersHorizontal className="ic" weight="bold" aria-hidden="true" />
-                Más opciones
-              </button>
+            {/* La región de estado existe siempre y solo cambia su texto. Lleva un texto estable (el
+                aviso de ángulo grande sin cifras, o el anuncio de la última acción): así el lector no
+                repite nada en cada paso del deslizador. */}
+            <div role="status" className="sr-only">
+              <span key={announcement?.id ?? 'aviso'}>{announcement?.text ?? modelNotice?.spoken ?? ''}</span>
             </div>
+            {!inExperiments && (
+              <div className="more">
+                <button
+                  ref={moreButton}
+                  type="button"
+                  className="btn sec"
+                  aria-expanded={drawerOpen}
+                  aria-controls="drawer"
+                  onClick={() => (drawerOpen ? closeDrawer() : openDrawer())}
+                >
+                  <SlidersHorizontal className="ic" weight="bold" aria-hidden="true" />
+                  Más opciones
+                </button>
+              </div>
+            )}
           </div>
+          {isNarrow && actionsBar}
         </aside>
 
-        <MoreOptions
-          open={drawerOpen}
-          titleRef={drawerTitle}
-          onClose={closeDrawer}
-          model={model}
-          onModelChange={handleModelChange}
-          maxPhi0={maxPhi0}
-          showLinear={showLinear}
-          onToggleLinear={() => setShowLinear((v) => !v)}
-          specs={drawerSpecs}
-          params={params}
-          presets={content.presets}
-          highlightedParamKey={currentStep?.highlightParamKey}
-          onParamChange={handleParamChange}
-          speed={speed}
-          onSpeedChange={setSpeed}
-          results={results}
-          highlightedResultKey={currentStep?.highlightResultKey}
-          onOpenTheory={openTheory}
-        />
+        {!inExperiments && (
+          <MoreOptions
+            open={drawerOpen}
+            titleRef={drawerTitle}
+            onClose={closeDrawer}
+            model={model}
+            onModelChange={handleModelChange}
+            maxPhi0={maxPhi0}
+            showLinear={showLinear}
+            onToggleLinear={() => setShowLinear((v) => !v)}
+            specs={drawerSpecs}
+            params={params}
+            presets={content.presets}
+            onParamChange={handleParamChange}
+            speed={speed}
+            onSpeedChange={setSpeed}
+            results={results}
+            onOpenTheory={openTheory}
+          />
+        )}
       </main>
 
       <TheoryPanel

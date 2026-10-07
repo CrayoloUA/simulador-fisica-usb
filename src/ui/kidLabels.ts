@@ -31,6 +31,9 @@ export function modelNote(model: PendulumModel, maxPhi0: number): string {
     : `Real: la cuenta completa, que sirve hasta ${max}.`;
 }
 
+/** Aviso previo, junto al selector de modelo: cambiarlo reinicia la simulación. */
+export const MODEL_CHANGE_WARNING = 'Al cambiar, la simulación empieza de nuevo.';
+
 export const CHART_LABELS: ChartLabels = {
   title: 'Ángulo (θ) en el tiempo (s)',
   simulated: 'Simulación',

@@ -12,6 +12,8 @@ interface Props<T extends string> {
   /** Una de las dos: etiqueta directa o id del elemento visible que da nombre al grupo. */
   ariaLabel?: string;
   labelledBy?: string;
+  /** Id del texto que describe el grupo (se lee después del nombre, antes de elegir). */
+  describedBy?: string;
   className?: string;
 }
 
@@ -21,13 +23,23 @@ interface Props<T extends string> {
  * además del color, así que el estado no depende solo del color. Los radios reales quedan
  * encima, transparentes, para que el área de toque sea todo el segmento.
  */
-export function Segmented<T extends string>({ name, options, value, onChange, ariaLabel, labelledBy, className }: Props<T>) {
+export function Segmented<T extends string>({
+  name,
+  options,
+  value,
+  onChange,
+  ariaLabel,
+  labelledBy,
+  describedBy,
+  className,
+}: Props<T>) {
   return (
     <div
       className={className ? `segs ${className}` : 'segs'}
       role="radiogroup"
       aria-label={ariaLabel}
       aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
     >
       {options.map((option) => (
         <label key={option.value} className="seg">

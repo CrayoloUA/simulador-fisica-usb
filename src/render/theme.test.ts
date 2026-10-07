@@ -1,3 +1,4 @@
+import tokensCss from '../tokens.css?raw';
 import { describe, expect, it } from 'vitest';
 import { cssLengthToPx, parseDashArray, readCanvasTheme } from './theme';
 
@@ -72,5 +73,78 @@ describe('readCanvasTheme', () => {
     expect(theme.dashLong).toEqual([9, 6]);
     expect(theme.ballRadius).toBe(22);
     expect(theme.ballPerSqrtKg).toBe(8);
+  });
+});
+
+/* ---------- Contraste de la curva punteada (tokens.css) ---------- */
+// Un trazo gráfico necesita 3:1 contra su fondo (WCAG 1.4.11); se pide 3,9:1 para dejar margen.
+const MIN_CURVE_CONTRAST = 3.9;
+
+
+/** Valor de un token dentro de un bloque: el de respaldo en hex o el de `@supports` en OKLCH. */
+function tokenValues(name: string): { hex: string; oklch: string } {
+  const all = [...tokensCss.matchAll(new RegExp(`--${name}:\s*([^;]+);`, 'g'))].map((m) => m[1].trim());
+  const hex = all.find((v) => v.startsWith('#'));
+  const oklch = all.find((v) => v.startsWith('oklch('));
+  if (!hex || !oklch) throw new Error(`falta el token --${name} en hex u OKLCH`);
+  return { hex, oklch };
+}
+
+function srgbFromHex(hex: string): number[] {
+  return [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16) / 255);
+}
+
+/** OKLCH a sRGB (matriz de Björn Ottosson), recortado al rango. */
+function srgbFromOklch(value: string): number[] {
+  const [l, c, h] = /oklch\(([^)]+)\)/.exec(value)![1].split(/\s+/).map(Number);
+  const hr = (h * Math.PI) / 180;
+  const a = c * Math.cos(hr);
+  const b = c * Math.sin(hr);
+  const l1 = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m1 = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s1 = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const linear = [
+    4.0767416621 * l1 - 3.3077115913 * m1 + 0.2309699292 * s1,
+    -1.2684380046 * l1 + 2.6097574011 * m1 - 0.3413193965 * s1,
+    -0.0041960863 * l1 - 0.7034186147 * m1 + 1.707614701 * s1,
+  ];
+  const encode = (v: number) => (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.abs(v) ** (1 / 2.4) - 0.055);
+  return linear.map((v) => Math.min(1, Math.max(0, encode(v))));
+}
+
+function relativeLuminance(rgb: number[]): number {
+  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+}
+
+function contrast(a: number[], b: number[]): number {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+describe('contraste de la curva punteada de comparación', () => {
+  const surface = tokenValues('surface');
+  const paper = tokenValues('paper');
+  const linear = tokenValues('curve-linear');
+  const sim = tokenValues('curve-sim');
+
+  it('en hex (respaldo) llega a 3,9:1 sobre el papel y sobre la superficie', () => {
+    expect(contrast(srgbFromHex(linear.hex), srgbFromHex(paper.hex))).toBeGreaterThanOrEqual(MIN_CURVE_CONTRAST);
+    expect(contrast(srgbFromHex(linear.hex), srgbFromHex(surface.hex))).toBeGreaterThanOrEqual(MIN_CURVE_CONTRAST);
+  });
+
+  it('en OKLCH llega a 3,9:1 sobre el papel y sobre la superficie', () => {
+    expect(contrast(srgbFromOklch(linear.oklch), srgbFromOklch(paper.oklch))).toBeGreaterThanOrEqual(MIN_CURVE_CONTRAST);
+    expect(contrast(srgbFromOklch(linear.oklch), srgbFromOklch(surface.oklch))).toBeGreaterThanOrEqual(MIN_CURVE_CONTRAST);
+  });
+
+  it('el hex y el OKLCH son el mismo color (diferencia de luminancia menor a 0,02)', () => {
+    const diff = Math.abs(relativeLuminance(srgbFromHex(linear.hex)) - relativeLuminance(srgbFromOklch(linear.oklch)));
+    expect(diff).toBeLessThan(0.02);
+  });
+
+  it('la curva azul sigue distinguible: mucho más oscura que la naranja', () => {
+    expect(relativeLuminance(srgbFromHex(sim.hex))).toBeLessThan(relativeLuminance(srgbFromHex(linear.hex)) / 3);
+    expect(contrast(srgbFromHex(sim.hex), srgbFromHex(linear.hex))).toBeGreaterThanOrEqual(2.2);
   });
 });

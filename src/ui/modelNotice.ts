@@ -4,7 +4,13 @@ import type { PendulumModel } from '../engine/phenomena/pendulum';
 export interface ModelNotice {
   /** Los dos avisos son advertencias: el estudiante debe tener cuidado con el modelo. */
   kind: 'warn';
+  /** Texto a la vista, con el porcentaje exacto del motor. */
   text: string;
+  /**
+   * Texto para el lector de pantalla: estable, sin cifras que cambien con el deslizador. Así la
+   * región de estado no lo repite en cada paso, solo cuando el aviso aparece.
+   */
+  spoken: string;
   /** Si el aviso ofrece el botón "Ver la comparación" (solo mientras la curva punteada está oculta). */
   offerComparison: boolean;
 }
@@ -35,9 +41,11 @@ export function describeModelNotice({
 }: Input): ModelNotice | null {
   if (adjustedTo !== null) {
     const max = formatNumber(adjustedTo);
+    const text = `El ángulo pequeño solo sirve hasta ${max}°. Bajamos el ángulo de salida a ${max}°.`;
     return {
       kind: 'warn',
-      text: `El ángulo pequeño solo sirve hasta ${max}°. Bajamos el ángulo de salida a ${max}°.`,
+      text,
+      spoken: text,
       offerComparison: false,
     };
   }
@@ -45,6 +53,7 @@ export function describeModelNotice({
     return {
       kind: 'warn',
       text: `Ángulo grande: el período es ${formatNumber(periodError, 1)} % más largo que con ángulo pequeño.`,
+      spoken: 'Ángulo grande: el período real es más largo que con ángulo pequeño.',
       offerComparison: !showLinear,
     };
   }

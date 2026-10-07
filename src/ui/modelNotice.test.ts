@@ -22,6 +22,7 @@ describe('describeModelNotice', () => {
     expect(describeModelNotice({ ...base, withinSmallAngle: false, periodError: 7.3126 })).toEqual({
       kind: 'warn',
       text: 'Ángulo grande: el período es 7,3 % más largo que con ángulo pequeño.',
+      spoken: 'Ángulo grande: el período real es más largo que con ángulo pequeño.',
       offerComparison: true,
     });
   });
@@ -36,6 +37,7 @@ describe('describeModelNotice', () => {
     expect(describeModelNotice({ ...base, model: 'lineal', adjustedTo: 15 })).toEqual({
       kind: 'warn',
       text: 'El ángulo pequeño solo sirve hasta 15°. Bajamos el ángulo de salida a 15°.',
+      spoken: 'El ángulo pequeño solo sirve hasta 15°. Bajamos el ángulo de salida a 15°.',
       offerComparison: false,
     });
   });
@@ -45,11 +47,19 @@ describe('describeModelNotice', () => {
     expect(notice?.text).toContain('Bajamos');
   });
 
+  it('el texto para el lector no cambia con el porcentaje: no se repite en cada paso del deslizador', () => {
+    const a = describeModelNotice({ ...base, withinSmallAngle: false, periodError: 3.1 });
+    const b = describeModelNotice({ ...base, withinSmallAngle: false, periodError: 7.3 });
+    expect(a?.text).not.toBe(b?.text);
+    expect(a?.spoken).toBe(b?.spoken);
+    expect(a?.spoken).not.toMatch(/\d/);
+  });
+
   it('ningún texto lleva guion largo', () => {
     const texts = [
       describeModelNotice({ ...base, withinSmallAngle: false }),
       describeModelNotice({ ...base, model: 'lineal', adjustedTo: 15 }),
-    ].map((notice) => notice?.text ?? '');
+    ].flatMap((notice) => [notice?.text ?? '', notice?.spoken ?? '']);
     for (const text of texts) expect(text).not.toContain('—');
   });
 });

@@ -24,18 +24,17 @@ interface Props {
   specs: ParamSpec[];
   params: Params;
   presets: Record<string, PresetValue[]>;
-  highlightedParamKey?: string;
   onParamChange: (key: string, value: number) => void;
   speed: number;
   onSpeedChange: (speed: number) => void;
   results: Record<string, number>;
-  highlightedResultKey?: string;
-  onOpenTheory: () => void;
+  /** Recibe el botón que abre la hoja: el foco vuelve a él al cerrarla. */
+  onOpenTheory: (opener: HTMLElement) => void;
 }
 
 /**
- * Cajón "Más opciones": lo que no hace falta para mirar el péndulo. Empuja el diseño en pantallas
- * anchas (no tapa el péndulo) y es una hoja inferior en el celular. Cerrado queda `inert`: sus
+ * Cajón "Más opciones" (solo en Explorar): lo que no hace falta para mirar el péndulo. Empuja el
+ * diseño en pantallas anchas (no tapa el péndulo) y es una hoja inferior en el celular. Cerrado queda `inert`: sus
  * controles no reciben foco ni se leen, pero el botón que lo abre puede apuntarle con aria-controls.
  */
 export function MoreOptions({
@@ -50,12 +49,10 @@ export function MoreOptions({
   specs,
   params,
   presets,
-  highlightedParamKey,
   onParamChange,
   speed,
   onSpeedChange,
   results,
-  highlightedResultKey,
   onOpenTheory,
 }: Props) {
   return (
@@ -84,7 +81,6 @@ export function MoreOptions({
                 spec={spec}
                 value={params[spec.key]}
                 presets={presets[spec.key]}
-                highlighted={highlightedParamKey === spec.key}
                 onChange={(value) => onParamChange(spec.key, value)}
               />
             </section>
@@ -102,10 +98,10 @@ export function MoreOptions({
           </section>
           <section className="dsec" aria-labelledby="h-cur">
             <h3 id="h-cur">Datos para curiosos</h3>
-            <CuriousData results={results} highlightedKey={highlightedResultKey} />
+            <CuriousData results={results} />
           </section>
           <section className="dsec">
-            <button type="button" className="btn sec" aria-haspopup="dialog" onClick={onOpenTheory}>
+            <button type="button" className="btn sec" aria-haspopup="dialog" onClick={(event) => onOpenTheory(event.currentTarget)}>
               <BookOpen className="ic" weight="bold" aria-hidden="true" />
               Teoría
             </button>

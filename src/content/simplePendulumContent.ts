@@ -11,7 +11,7 @@ export const simplePendulumContent: LabContent = {
   experimentModel: 'no-lineal',
   theoryByModel: {
     lineal: {
-      title: 'Modelo lineal (ángulo pequeño)',
+      title: 'Ángulo pequeño (modelo lineal)',
       equations: [
         "θ'' + (g/L)·θ + b·θ' = 0",
         'θ(t) = A·cos(ω₀t + φ), con ω₀ = √(g/L) (sin fricción, b = 0)',
@@ -21,15 +21,15 @@ export const simplePendulumContent: LabContent = {
         'Parte de la aproximación sen θ ≈ θ, que solo vale para ángulos muy pequeños: por debajo de 10°, ' +
         'idealmente tendiendo a 0. Con ángulos mayores el período real es más largo que T₀ y el modelo se equivoca.',
       chartOrigin:
-        'La curva azul (Simulada) sale de una integración numérica: el programa resuelve paso a paso, con el ' +
+        'La curva azul (Simulación) sale de una integración numérica: el programa resuelve paso a paso, con el ' +
         'método RK4, la ecuación diferencial del modelo y dibuja cada valor que calcula; no es una fórmula ' +
-        'escrita a mano ni una captura del dibujo del péndulo. La curva punteada (Aprox. lineal) sí es una ' +
+        'escrita a mano ni una captura del dibujo del péndulo. La curva punteada (Ángulo pequeño) sí es una ' +
         'fórmula: la solución analítica de la ecuación linealizada. En este modelo las dos resuelven la misma ' +
         'ecuación, por eso coinciden.',
       signConvention: SIGN_CONVENTION,
     },
     'no-lineal': {
-      title: 'Modelo no lineal (real)',
+      title: 'Real (modelo no lineal)',
       equations: [
         "θ'' + (g/L)·sen θ + b·θ' = 0",
         'T(φ₀) = T₀ · [1 + (1/2)²·sen²(φ₀/2) + (1·3 / 2·4)²·sen⁴(φ₀/2) + (1·3·5 / 2·4·6)²·sen⁶(φ₀/2) + …]',
@@ -42,9 +42,9 @@ export const simplePendulumContent: LabContent = {
         '2π√(L/g): crece con φ₀. Por debajo de 10° coincide con el modelo lineal; por encima, la diferencia ' +
         'con T₀ ya se nota.',
       chartOrigin:
-        'La curva azul (Simulada) sale de una integración numérica: el programa resuelve paso a paso, con el ' +
+        'La curva azul (Simulación) sale de una integración numérica: el programa resuelve paso a paso, con el ' +
         'método RK4, la ecuación con sen θ y dibuja cada valor que calcula; no es una fórmula escrita a mano ' +
-        'ni una captura del dibujo. La curva punteada (Aprox. lineal) es la solución analítica de la ecuación ' +
+        'ni una captura del dibujo. La curva punteada (Ángulo pequeño) es la solución analítica de la ecuación ' +
         'linealizada. Las dos curvas se separan desde el primer ciclo porque resuelven ecuaciones distintas: ' +
         'la azul usa sen θ y la punteada usa θ. Como el período real es mayor que T₀, la diferencia se ' +
         'acumula y crece con φ₀.',
@@ -163,7 +163,7 @@ export const simplePendulumContent: LabContent = {
           highlightParamKey: 'L',
         },
         {
-          instruction: "Presiona Play y observa el péndulo oscilar. Fíjate en el Período T en 'Lo que obtienes'.",
+          instruction: "Presiona Play y observa el péndulo oscilar. Fíjate en el Período T, el número grande de los resultados.",
           highlightResultKey: 'T',
         },
       ],
@@ -206,7 +206,7 @@ export const simplePendulumContent: LabContent = {
           highlightResultKey: 'T',
         },
         {
-          instruction: 'Sin cambiar nada más, cambia la Masa m a 5 kg.',
+          instruction: 'Sin cambiar nada más, cambia la Masa (m) a 5 kg.',
           highlightParamKey: 'm',
         },
         {
@@ -252,7 +252,7 @@ export const simplePendulumContent: LabContent = {
           highlightResultKey: 'T',
         },
         {
-          instruction: 'Cambia la Longitud L a 4 m (cuatro veces más larga).',
+          instruction: 'Cambia el Largo del hilo (L) a 4 m (cuatro veces más largo).',
           highlightParamKey: 'L',
         },
         {
@@ -349,12 +349,12 @@ export const simplePendulumContent: LabContent = {
           highlightResultKey: 'T',
         },
         {
-          instruction: 'Cambia el Ángulo inicial φ₀ a 60°, sin tocar L ni g.',
+          instruction: 'Cambia el Ángulo de salida (φ₀) a 60°, sin tocar L ni g.',
           highlightParamKey: 'phi0',
         },
         {
           instruction:
-            'Compara el nuevo Período T con el que anotaste. Luego mira la gráfica: la curva punteada (aproximación lineal) se va separando de la curva azul (la simulación real). Lee también el aviso sobre el modelo.',
+            'Compara el nuevo Período T con el que anotaste. Luego mira la gráfica: la curva punteada (Ángulo pequeño) se va separando de la curva azul (Simulación). Lee también el aviso sobre el modelo.',
           highlightResultKey: 'T',
         },
       ],

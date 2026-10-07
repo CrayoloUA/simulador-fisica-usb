@@ -68,10 +68,12 @@ export function TheoryPanel({ open, onClose, theory, results, formulaText, entri
             Cerrar
           </button>
         </div>
-        <div className="sheet-body">
+        {/* Desplazable con teclado: tabIndex 0 lo mete en el orden de Tab (y en la trampa de foco) y las
+            flechas lo desplazan; la región con nombre le dice al lector qué es. */}
+        <div className="sheet-body" tabIndex={0} role="region" aria-labelledby="sheet-title">
           <section>
             <h3>Qué es cada cosa</h3>
-            <ul>
+            <ul role="list">
               {entries.map((entry) => (
                 <li key={entry.id}>
                   <b>{entry.title}</b>

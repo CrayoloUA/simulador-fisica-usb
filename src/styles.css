@@ -122,8 +122,9 @@ select {
   outline-offset: var(--ring-gap);
 }
 
-/* Destinos de foco programático (tabindex="-1"): no son controles operables por Tab. */
-.focus-target:focus {
+/* Destinos de foco programático (tabindex="-1"): no son controles operables por Tab. Sin anillo
+   cuando el foco lo movió el programa; si el niño llegó con el teclado (focus-visible), sí se ve. */
+.focus-target:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -461,6 +462,53 @@ select {
   max-width: calc(100% - var(--s5));
 }
 
+/* Sin contexto 2D no hay canvas: una caja explicativa ocupa su lugar. Es información serena, no un
+   error (tono neutro), y sigue la misma caja del escenario. */
+.canvas-off {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+  padding: var(--s5);
+  overflow-y: auto;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.canvas-off > * {
+  max-width: var(--w-notice);
+}
+
+.canvas-off-ic {
+  width: var(--swatch);
+  height: var(--swatch);
+  color: var(--ink-faint);
+}
+
+.canvas-off-title {
+  margin: 0;
+  font: 600 var(--text-lead) / 1.3 var(--font-serif);
+  color: var(--ink);
+}
+
+.canvas-off-text {
+  margin: 0;
+  font: 400 var(--text-body) / 1.45 var(--font-serif);
+}
+
+/* En el lugar de la gráfica solo cabe una línea con su ícono. */
+.canvas-off-chart {
+  flex-direction: row;
+  gap: var(--s3);
+}
+
+.canvas-off-chart .canvas-off-text {
+  font-size: var(--text-small);
+}
+
 /* ---------- Avisos ---------- */
 .notice {
   display: flex;
@@ -724,6 +772,11 @@ select {
   line-height: 1.6;
 }
 
+/* Desplazable con teclado: el anillo va por dentro del borde de la hoja para que no se recorte. */
+.sheet-body:focus-visible {
+  outline-offset: calc(-1 * var(--ring));
+}
+
 .sheet-body section {
   padding: var(--s4) 0;
   border-bottom: var(--hair) solid var(--line);
@@ -795,6 +848,7 @@ select {
   grid-column: 1;
   grid-row: 1;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
@@ -842,9 +896,9 @@ select {
   display: flex;
   flex-direction: column;
   overflow: auto;
-  /* Margen interno para que el anillo de foco de los bordes no se recorte. */
-  padding: var(--s1);
-  margin: calc(-1 * var(--s1));
+  /* Margen interno para que el anillo de foco y el contorno del resaltado no se recorten. */
+  padding: var(--s2);
+  margin: calc(-1 * var(--s2));
 }
 
 .actions {
@@ -911,116 +965,395 @@ select {
   width: 100%;
 }
 
-/* ---------- Experimentos: la lección va en la columna derecha, sobre los controles ---------- */
-.lesson {
-  margin-bottom: var(--s3);
-  padding-bottom: var(--s4);
-  border-bottom: var(--hair) solid var(--line);
+/* ---------- Experimentos ----------
+   La lección es un bloque con título y filetes neutros (la columna derecha ya es el panel, así que
+   no es una tarjeta dentro de otra). No hay cajón: lo que un paso pide mirar y vive en "Más
+   opciones" se muestra dentro de la lección. Toda la columna se desplaza por dentro si no cabe. */
+@media (min-width: 901px) {
+  .app[data-modo='experimentos'] .aside {
+    gap: var(--s2);
+    padding: var(--s3);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .app[data-modo='experimentos'] .aside-scroll {
+    flex: none;
+    overflow: visible;
+    gap: var(--s2);
+  }
+
+  .app[data-modo='experimentos'] .actions .play {
+    min-height: var(--control);
+    min-width: 0;
+    font-size: var(--text-body);
+  }
+
+  /* El resultado y el aviso del modelo van antes de los controles: así, aunque la columna se
+     desplace, lo que el paso pide mirar queda cerca de Play. */
+  .app[data-modo='experimentos'] .results {
+    order: 1;
+    margin-top: 0;
+    padding-top: var(--s2);
+  }
+
+  .app[data-modo='experimentos'] .status {
+    order: 2;
+  }
+
+  .app[data-modo='experimentos'] .params {
+    order: 3;
+    gap: var(--s2);
+  }
+
+  .app[data-modo='experimentos'] .plabel {
+    margin-bottom: 0;
+  }
+
+  /* T y f compactos: el valor grande a la derecha del nombre, para que la columna sea más corta. */
+  .app[data-modo='experimentos'] .rmain {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    column-gap: var(--s3);
+  }
+
+  .app[data-modo='experimentos'] .rmain .rbig {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    font-size: var(--text-2);
+  }
+
+  .app[data-modo='experimentos'] .rmain .rlabel {
+    grid-column: 1;
+    align-self: end;
+  }
+
+  .app[data-modo='experimentos'] .rmain .rsub {
+    grid-column: 1;
+    align-self: start;
+  }
 }
 
-.experiment-panel {
+.lesson {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding-bottom: var(--s3);
+  border-bottom: var(--hair) solid var(--line-strong);
+}
+
+.lesson-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.lesson-name {
+  min-width: 0;
+  font: 600 var(--text-body) / 1.25 var(--font-serif);
+}
+
+.lesson-title {
+  font: 600 var(--text-lead) / 1.2 var(--font-serif);
+}
+
+/* Al llevar a la vista lo resaltado, que su contorno no quede pegado al borde. */
+.hl {
+  scroll-margin-block: var(--s3);
+}
+
+.lesson .btn:not(.icon-only) {
+  padding: 0 var(--s4);
+}
+
+.btn.icon-only {
+  flex: none;
+  width: var(--control);
+  padding: 0;
+}
+
+.ic-sm {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+}
+
+/* Indicador de etapas: círculos numerados unidos por un filete. Hecha: marca. Actual: aro grueso y
+   nombre en negrita. Pendiente: solo el número. */
+.stages {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Filete que une los círculos, por detrás de ellos: del centro del primero al del último. */
+.stages::before {
+  content: '';
+  position: absolute;
+  top: calc((var(--dot) - var(--bold)) / 2);
+  left: calc(var(--dot) / 2);
+  right: calc(var(--dot) / 2);
+  height: var(--bold);
+  background: var(--line-strong);
+}
+
+/* Cada círculo con su nombre debajo; el primero y el último van a los bordes para que los
+   nombres nunca se pisen ni se salgan de la columna. */
+.stage-item {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s1);
+  text-align: center;
+  color: var(--ink-soft);
+  font: 400 var(--text-small) / 1.2 var(--font-sans);
+}
+
+.stage-item:first-child {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.stage-item:last-child {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.stage-dot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--dot);
+  height: var(--dot);
+  border: var(--bold) solid var(--line-strong);
+  border-radius: var(--r-round);
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 var(--text-small) / 1 var(--font-sans);
+}
+
+.stage-item[data-status='done'] .stage-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.stage-item[data-status='current'] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.stage-item[data-status='current'] .stage-dot {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  outline: var(--bold) solid var(--accent);
+  outline-offset: var(--s1);
+}
+
+/* Cada etapa (predicción, paso, pregunta, conclusión) separa sus bloques. */
+.step {
   display: flex;
   flex-direction: column;
   gap: var(--s3);
 }
 
-/* Cada etapa (predicción, paso, pregunta, conclusión) separa sus bloques. */
-.experiment-panel [role='group'] > * + * {
-  margin-top: var(--s3);
+.instruction,
+.question {
+  font: 400 var(--text-body) / 1.4 var(--font-serif);
 }
 
-.experiment-panel h2 {
-  font-size: var(--text-lead);
-  font-weight: 600;
+.lesson-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
 }
 
-.experiment-panel p {
-  font-family: var(--font-serif);
-  font-size: var(--text-body);
-  line-height: 1.4;
-}
-
-.experiment-panel .progress {
+.reason {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
   color: var(--ink-soft);
-  font: 400 var(--text-small) / 1.4 var(--font-sans);
+  font: 400 var(--text-small) / 1.3 var(--font-sans);
 }
 
-.experiment-panel button {
-  min-height: var(--control);
-  padding: var(--s2) var(--s4);
-  border: var(--hair) solid var(--accent);
-  border-radius: var(--r-md);
-  background: var(--accent);
-  color: var(--on-accent);
-  font: 600 var(--text-small) / 1.3 var(--font-sans);
-  text-align: left;
-  cursor: pointer;
+/* Reserva su alto aunque esté vacía: así el aviso no mueve lo de abajo al aparecer. */
+.prepared {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: var(--s5);
+  color: var(--ok-text);
+  font: 600 var(--text-small) / 1.5 var(--font-sans);
 }
 
-.experiment-panel button:hover {
-  background: var(--accent-hover);
+.inline-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  /* Espacio para el contorno del resaltado, que no debe recortarse. */
+  padding: var(--s2);
 }
 
-.experiment-panel button[aria-disabled='true'] {
-  background: var(--paper-sunken);
-  border-color: var(--line);
-  color: var(--ink-faint);
-  cursor: not-allowed;
+.inline-items .param,
+.inline-items .curios > div {
+  padding: var(--s2) var(--s3);
 }
 
-.experiment-panel .secondary,
-.experiment-panel .option-button {
-  background: var(--surface);
-  border-color: var(--line-strong);
-  color: var(--ink);
-}
-
-.experiment-panel .secondary:hover,
-.experiment-panel .option-button:hover {
-  background: var(--paper-sunken);
-}
-
-.experiment-list,
-.predict-options {
+/* Opciones de predicción y comprobación, y botones de la lista: grandes y con ícono. */
+.choices,
+.exp-list {
   display: grid;
   gap: var(--s2);
 }
 
-.option-button {
-  font-weight: 400;
-}
-
-.experiment-panel .option-button[aria-checked='true'] {
-  background: var(--accent-soft);
-  border: var(--bold) solid var(--accent);
-}
-
-/* Opciones no elegidas tras responder: siguen legibles. */
-.experiment-panel .option-button[aria-disabled='true'] {
+.opt,
+.exp-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: var(--control);
+  padding: var(--s3) var(--s4);
   background: var(--surface);
-  border-color: var(--line-strong);
+  color: var(--ink);
+  border: var(--hair) solid var(--line-strong);
+  border-radius: var(--r-md);
+  font: 400 var(--text-body) / 1.3 var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--t-fast) var(--ease);
+}
+
+.opt:hover,
+.exp-item:hover {
+  background: var(--paper-sunken);
+}
+
+.opt[aria-checked='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 var(--hair) var(--accent);
+  font-weight: 600;
+}
+
+.opt[aria-checked='true'] .ic {
+  color: var(--accent);
+}
+
+.opt[data-verdict='correct'] {
+  background: var(--ok-bg);
+  border-color: var(--ok-line);
+  box-shadow: inset 0 0 0 var(--hair) var(--ok-line);
+  color: var(--ok-text);
+}
+
+.opt[data-verdict='correct'] .ic {
+  color: var(--ok-text);
+}
+
+.opt[data-verdict='wrong'] {
+  background: var(--warn-bg);
+  border-color: var(--warn-line);
+  box-shadow: inset 0 0 0 var(--hair) var(--warn-line);
+  color: var(--warn-text);
+}
+
+.opt[data-verdict='wrong'] .ic {
+  color: var(--warn-text);
+}
+
+/* Opciones no elegidas tras responder: siguen legibles, pero ya no se pueden elegir. */
+.opt[aria-disabled='true'],
+.opt[aria-disabled='true']:hover {
+  background: var(--surface);
   color: var(--ink-soft);
   cursor: default;
 }
 
-.feedback {
-  padding: var(--s3) var(--s4);
-  border: var(--bold) solid;
-  border-radius: var(--r-md);
-  font-family: var(--font-sans);
-  font-size: var(--text-small);
+.exp-item {
+  justify-content: space-between;
 }
 
-.feedback-correct {
+.exp-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.exp-title {
+  font-weight: 600;
+}
+
+.exp-blurb {
+  color: var(--ink-soft);
+  font-size: var(--text-small);
+  line-height: 1.3;
+}
+
+.feedback {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: var(--s3) var(--s4);
+  border: var(--hair) solid;
+  border-radius: var(--r-md);
+}
+
+.feedback[data-verdict='correct'] {
   background: var(--ok-bg);
   border-color: var(--ok-line);
   color: var(--ok-text);
 }
 
-.feedback-incorrect {
-  background: var(--bad-bg);
-  border-color: var(--bad-line);
-  color: var(--bad-text);
+/* Una respuesta equivocada es un tono de aviso sereno, no de error. */
+.feedback[data-verdict='wrong'] {
+  background: var(--warn-bg);
+  border-color: var(--warn-line);
+  color: var(--warn-text);
+}
+
+.feedback-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font: 600 var(--text-body) / 1.3 var(--font-sans);
+}
+
+.feedback-text {
+  font: 400 var(--text-small) / 1.4 var(--font-serif);
+}
+
+.verdict {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  border: var(--hair) solid;
+  border-radius: var(--r-md);
+  font: 600 var(--text-small) / 1.4 var(--font-sans);
+}
+
+.verdict .ic {
+  margin-top: var(--s1);
+}
+
+.verdict[data-tone='ok'] {
+  background: var(--ok-bg);
+  border-color: var(--ok-line);
+  color: var(--ok-text);
+}
+
+/* Predicción que no acertó: informativo, sin rojo. */
+.verdict[data-tone='info'] {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--ink);
 }
 
 /* ---------- Ventanas medianas: columnas laterales más angostas ---------- */
@@ -1047,6 +1380,21 @@ select {
 @media (max-width: 900px) {
   :root {
     --gutter: var(--s4);
+    /* Alto de la barra fija de Play y Reiniciar (el botón y el aire de arriba y abajo). */
+    --bar-h: calc(var(--play-h) + 2 * var(--s3));
+    /* Tope del alto de la lección pegada arriba durante los pasos. */
+    --lesson-max: 35dvh;
+  }
+
+  /* Lo que se lleva a la vista (foco, resaltado) no debe quedar bajo la barra fija de Play. */
+  html {
+    scroll-padding-bottom: calc(var(--bar-h) + var(--s3));
+  }
+
+  /* Durante los pasos la lección queda pegada arriba: el foco que llega con Shift+Tab no debe
+     quedar tapado por ella. La página se desplaza en el documento (html), así que va aquí. */
+  html:has(.lesson[data-phase='steps']) {
+    scroll-padding-top: calc(var(--lesson-max) + var(--s3));
   }
 
   .app {
@@ -1100,9 +1448,42 @@ select {
     margin: var(--s3) var(--gutter) 0;
   }
 
+  /* La lección va arriba del péndulo: cada parte suya es un elemento más de la columna. Durante los
+     pasos, el cuerpo (título, instrucción y botones) queda pegado arriba mientras el niño usa los
+     controles y mira los resultados, sin ocupar más de la mitad de la pantalla. */
+  .top {
+    order: -2;
+  }
+
   .lesson {
-    order: 4;
-    margin: var(--s3) var(--gutter) 0;
+    display: contents;
+  }
+
+  .lesson-head,
+  .stages {
+    order: -1;
+    margin: var(--s2) var(--gutter) 0;
+  }
+
+  .lesson-body {
+    order: -1;
+    padding: var(--s3) var(--gutter);
+    border-bottom: var(--hair) solid var(--line);
+  }
+
+  .lesson[data-phase='steps'] .lesson-body {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    max-height: var(--lesson-max);
+    overflow-y: auto;
+    background: var(--paper);
+  }
+
+  /* Al llevar a la vista lo resaltado: que no quede bajo la lección pegada arriba ni bajo Play. */
+  .hl {
+    scroll-margin-top: calc(var(--lesson-max) + var(--s3));
+    scroll-margin-bottom: calc(var(--bar-h) + var(--s3));
   }
 
   .results {
@@ -1127,19 +1508,20 @@ select {
     text-align: right;
   }
 
-  .status {
-    order: 6;
-    margin: 0 var(--gutter);
-  }
-
+  /* Orden visual igual al del DOM (controles, aviso, Más opciones, Play): así Tab sigue lo que se ve. */
   .params {
-    order: 7;
+    order: 6;
     margin: var(--s3) var(--gutter) 0;
     padding: var(--s4);
     background: var(--paper-sunken);
     border: var(--hair) solid var(--line);
     border-radius: var(--r-lg);
     gap: var(--s4);
+  }
+
+  .status {
+    order: 7;
+    margin: 0 var(--gutter);
   }
 
   .more {
@@ -1164,18 +1546,33 @@ select {
     width: calc(100% - 2 * var(--s4));
   }
 
+  .canvas-off {
+    padding: var(--s4);
+    gap: var(--s2);
+  }
+
+  .canvas-off-title {
+    font-size: var(--text-body);
+  }
+
+  .canvas-off-text {
+    font-size: var(--text-small);
+  }
+
   .drawer {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
+    /* Por encima de la barra de Play y Reiniciar, no encima: así siguen a la vista y se pueden pulsar. */
+    bottom: var(--bar-h);
     z-index: 40;
     display: flex;
     flex-direction: column;
-    max-height: 50dvh;
+    max-height: calc(50dvh - var(--bar-h));
     border-radius: var(--r-lg) var(--r-lg) 0 0;
     box-shadow: var(--shadow-pop);
-    transform: translateY(100%);
+    /* Cerrado, se esconde por completo bajo la pantalla (no pasa por encima de la barra). */
+    transform: translateY(calc(100% + var(--bar-h)));
     transition:
       transform var(--t-base) var(--ease),
       visibility 0s linear var(--t-base);
@@ -1190,7 +1587,7 @@ select {
   .drawer-in {
     width: 100%;
     height: auto;
-    max-height: 50dvh;
+    max-height: calc(50dvh - var(--bar-h));
   }
 
   .drawer-head {
@@ -1229,4 +1626,23 @@ select {
   * {
     transition: none !important;
   }
+}
+
+/* Pantalla de último recurso (AppErrorBoundary): solo tokens, legible sin el resto de la interfaz. */
+.app-error {
+  max-width: 36rem;
+  margin: var(--s8) auto 0;
+  padding: var(--s5) var(--s6);
+  background: var(--surface);
+  border: var(--bw-sel) solid var(--line-strong);
+  border-radius: var(--r-lg);
+  color: var(--ink);
+}
+.app-error h1 {
+  margin: 0 0 var(--s3);
+  font: 600 var(--text-3) / 1.25 var(--font-serif);
+}
+.app-error p {
+  margin: 0 0 var(--s4);
+  font-size: var(--text-body);
 }

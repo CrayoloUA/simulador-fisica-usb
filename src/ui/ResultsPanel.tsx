@@ -1,4 +1,9 @@
+import { resultsSummary } from './announcements';
 import { CURIOUS_RESULT_KEYS, RESULT_LABELS, formatResult } from './kidLabels';
+import { useDebouncedValue } from './useDebouncedValue';
+
+/** Espera, tras el último cambio, antes de que el lector de pantalla lea el resumen de resultados. */
+const SUMMARY_DEBOUNCE_MS = 600;
 
 interface Props {
   results: Record<string, number>;
@@ -6,15 +11,25 @@ interface Props {
   highlightedKey?: string;
 }
 
+interface CuriousProps extends Props {
+  /** Qué datos mostrar; por omisión, todos. La tarjeta de lección muestra solo el que el paso pide. */
+  keys?: string[];
+}
+
 /**
  * Resultados a la vista: el período T grande, con su subtítulo, y la frecuencia f al lado. El
  * resto (T₀, diferencia, ω₀) vive en "Datos para curiosos" dentro de "Más opciones".
+ *
+ * Las cifras sueltas no son una región viva (el lector las leería en cada paso del deslizador). En
+ * su lugar hay un resumen oculto y atómico ("Período X s. Frecuencia Y Hz.") que se actualiza solo
+ * cuando las cifras llevan un rato sin cambiar.
  */
 export function ResultsPanel({ results, highlightedKey }: Props) {
   const period = RESULT_LABELS.T;
   const frequency = RESULT_LABELS.f;
+  const summary = useDebouncedValue(resultsSummary(results), SUMMARY_DEBOUNCE_MS);
   return (
-    <section className="results" aria-label="Resultados" aria-live="polite">
+    <section className="results" aria-label="Resultados">
       <div className={highlightedKey === 'T' ? 'rmain hl' : 'rmain'}>
         <p className="rlabel">
           {period.label} <span className="sym">({period.symbol})</span>
@@ -30,15 +45,18 @@ export function ResultsPanel({ results, highlightedKey }: Props) {
           {formatResult('f', results.f)} {frequency.unit}
         </b>
       </p>
+      <p role="status" aria-atomic="true" className="sr-only">
+        {summary}
+      </p>
     </section>
   );
 }
 
 /** Datos para curiosos: lo que no hace falta para entender el péndulo, pero que algunos querrán ver. */
-export function CuriousData({ results, highlightedKey }: Props) {
+export function CuriousData({ results, highlightedKey, keys = CURIOUS_RESULT_KEYS }: CuriousProps) {
   return (
     <dl className="curios">
-      {CURIOUS_RESULT_KEYS.map((key) => {
+      {keys.map((key) => {
         const label = RESULT_LABELS[key];
         return (
           <div key={key} className={highlightedKey === key ? 'hl' : undefined}>

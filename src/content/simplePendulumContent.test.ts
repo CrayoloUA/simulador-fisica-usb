@@ -322,3 +322,45 @@ describe('simplePendulumContent: experimentos y resultados tras la revisión de 
     }
   });
 });
+
+describe('simplePendulumContent: vocabulario igual al de la interfaz', () => {
+  const models = ['lineal', 'no-lineal'] as const;
+  const theoryTexts = () =>
+    models.flatMap((model) => {
+      const t = simplePendulumContent.theoryByModel[model];
+      return [t.title, t.validity, t.chartOrigin];
+    });
+
+  it.each(models)('el origen de la gráfica (%s) nombra las curvas como la leyenda: Simulación y Ángulo pequeño', (model) => {
+    const origin = simplePendulumContent.theoryByModel[model].chartOrigin;
+    expect(origin).toContain('La curva azul (Simulación)');
+    expect(origin).toContain('La curva punteada (Ángulo pequeño)');
+    expect(origin).not.toMatch(/Simulada|Aprox\. lineal/);
+  });
+
+  it('los títulos de la teoría empiezan con el nombre del modelo en la interfaz (Ángulo pequeño, Real)', () => {
+    expect(simplePendulumContent.theoryByModel.lineal.title).toMatch(/^Ángulo pequeño/);
+    expect(simplePendulumContent.theoryByModel['no-lineal'].title).toMatch(/^Real/);
+  });
+
+  it('los experimentos no usan nombres que la pantalla ya no tiene', () => {
+    const text = allExperimentText();
+    expect(text).not.toMatch(/Lo que obtienes|Aproximación lineal|aproximación lineal|Aprox\. lineal|Simulada/);
+    expect(text).not.toMatch(/Longitud L|Ángulo inicial φ₀|Masa m/);
+    expect(theoryTexts().join(' ')).not.toMatch(/Aproximación lineal|Aprox\. lineal/);
+  });
+
+  it('los pasos nombran los controles como la pantalla: Largo del hilo, Ángulo de salida, Masa', () => {
+    const instructions = (id: string) => experiment(id).steps.map((step) => step.instruction).join(' ');
+    expect(instructions('depende-de-la-longitud')).toContain('Largo del hilo (L)');
+    expect(instructions('depende-del-angulo')).toContain('Ángulo de salida (φ₀)');
+    expect(instructions('depende-de-la-masa')).toContain('Masa (m)');
+    expect(instructions('depende-del-angulo')).toContain('curva punteada (Ángulo pequeño)');
+    expect(instructions('depende-del-angulo')).toContain('curva azul (Simulación)');
+  });
+
+  it('el experimento de la longitud mantiene "Casi:" para quien responde "cuatro veces mayor"', () => {
+    expect(experiment('depende-de-la-longitud').check[0].feedback.cuadruple).toMatch(/^Casi: /);
+  });
+});
+

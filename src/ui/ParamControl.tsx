@@ -9,6 +9,8 @@ interface Props {
   presets?: PresetValue[];
   /** Un paso del experimento pide mirar este control. */
   highlighted?: boolean;
+  /** Muestra la nota bajo el control. En un experimento se oculta: la de la masa adelanta la respuesta. */
+  showNote?: boolean;
   onChange: (value: number) => void;
 }
 
@@ -17,11 +19,11 @@ interface Props {
  * único campo: no deja salir del rango, así que no hay valores inválidos que corregir. El valor
  * mostrado va oculto para el lector de pantalla porque el deslizador ya lo dice (aria-valuetext).
  */
-export function ParamControl({ spec, value, presets, highlighted, onChange }: Props) {
+export function ParamControl({ spec, value, presets, highlighted, showNote = true, onChange }: Props) {
   const { label, symbol } = paramLabel(spec);
   const text = formatParamValue(spec.key, value);
   const id = `param-${spec.key}`;
-  const note = PARAM_NOTES[spec.key];
+  const note = showNote ? PARAM_NOTES[spec.key] : undefined;
   // Porcentaje recorrido del deslizador: pinta la parte "llena" de la pista.
   const fill = ((value - spec.min) / (spec.max - spec.min)) * 100;
 

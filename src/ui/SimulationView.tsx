@@ -1,13 +1,20 @@
+import { ChartLine, Monitor } from '@phosphor-icons/react';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { DEG_TO_RAD, formatNumber } from '../engine/numbers';
+import { DEG_TO_RAD } from '../engine/numbers';
 import { Simulation } from '../engine/simulation';
 import type { Params, Phenomenon } from '../engine/types';
 import { drawChart } from '../render/drawChart';
 import { drawPendulum } from '../render/drawPendulum';
 import { readCanvasTheme, type CanvasTheme } from '../render/theme';
+import {
+  CANVAS_UNAVAILABLE_TEXT,
+  CANVAS_UNAVAILABLE_TITLE,
+  CHART_UNAVAILABLE_TEXT,
+  canDrawCanvas,
+} from './canvasSupport';
+import { watchDevicePixelRatio } from './dprWatch';
 import { CHART_LABELS } from './kidLabels';
-
-const LIVE_INTERVAL_MS = 200;
+import { describeLive, liveDue } from './liveDescription';
 
 interface Props {
   phenomenon: Phenomenon;
@@ -43,7 +50,10 @@ function fit(canvas: HTMLCanvasElement, width: number, height: number): Fitted {
 /**
  * Columna izquierda: el péndulo grande y, debajo, la gráfica θ(t). Cada caja manda sobre su
  * canvas: al cambiar su tamaño se reajusta y se repinta. La descripción "En vivo" va oculta a la
- * vista (solo para lectores de pantalla) y la actualiza la simulación unas 5 veces por segundo.
+ * vista (solo para lectores de pantalla) y se actualiza una vez por segundo mientras corre, y de
+ * inmediato al pausar o reiniciar.
+ * Si el navegador no da contexto 2D, en vez de los canvas se muestra una caja explicativa; la
+ * simulación y el motor siguen corriendo, así que los controles y los resultados no se afectan.
  */
 export function SimulationView({ phenomenon, params, running, speed, resetToken, showLinear = false, onError }: Props) {
   const pendBox = useRef<HTMLElement>(null);
@@ -63,6 +73,8 @@ export function SimulationView({ phenomenon, params, running, speed, resetToken,
   const onErrorRef = useRef(onError);
   // La caja "Presiona Play" se ve mientras la simulación no ha empezado ni ha fallado.
   const [started, setStarted] = useState(false);
+  // Se prueba una vez al montar, con un canvas suelto. Si no hay contexto 2D, no se montan los canvas.
+  const [canDraw] = useState(() => canDrawCanvas(() => document.createElement('canvas')));
 
   const paintedT = useRef(-1);
   const liveStale = useRef(false);
@@ -99,9 +111,7 @@ export function SimulationView({ phenomenon, params, running, speed, resetToken,
 
   const paintLive = useCallback((sim: Simulation, now: number) => {
     if (liveRef.current) {
-      liveRef.current.textContent =
-        `En vivo: t = ${formatNumber(sim.t, 2)} s, θ = ${formatNumber(sim.state.theta / DEG_TO_RAD, 1)}°, ` +
-        `ω = ${formatNumber(sim.state.omega, 2)} rad/s`;
+      liveRef.current.textContent = describeLive(sim.t, sim.state.theta, sim.state.omega);
     }
     liveStale.current = false;
     liveAt.current = now;
@@ -112,6 +122,11 @@ export function SimulationView({ phenomenon, params, running, speed, resetToken,
     speedRef.current = speed;
     onErrorRef.current = onError;
   }, [running, speed, onError]);
+
+  // Al pausar, la descripción se actualiza de inmediato (no espera el intervalo de cuando corre).
+  useEffect(() => {
+    if (!running && simRef.current) paintLive(simRef.current, performance.now());
+  }, [running, paintLive]);
 
   // Con la simulación en pausa el bucle no repinta (sim.t no cambia): se repinta aquí, con las
   // mismas muestras. No depende de la creación de la Simulation, así que no la reinicia.
@@ -142,10 +157,22 @@ export function SimulationView({ phenomenon, params, running, speed, resetToken,
       refreshTheme();
       if (simRef.current) paintCanvases(simRef.current);
     };
+    // Si cambia la densidad de pantalla (zoom, otra pantalla) sin cambiar el tamaño CSS, el
+    // ResizeObserver no avisa: se reajusta cada canvas con su mismo tamaño y la densidad nueva.
+    const stopWatchingDpr = watchDevicePixelRatio(window, () => {
+      if (pendCanvas.current && pendSize.current) {
+        pendSize.current = fit(pendCanvas.current, pendSize.current.width, pendSize.current.height);
+      }
+      if (chartCanvas.current && chartSize.current) {
+        chartSize.current = fit(chartCanvas.current, chartSize.current.width, chartSize.current.height);
+      }
+      repaint();
+    });
     document.fonts?.ready.then(repaint);
     document.fonts?.addEventListener('loadingdone', repaint);
     return () => {
       observer.disconnect();
+      stopWatchingDpr();
       document.fonts?.removeEventListener('loadingdone', repaint);
     };
   }, [paintCanvases, refreshTheme]);
@@ -175,7 +202,7 @@ export function SimulationView({ phenomenon, params, running, speed, resetToken,
           if (sim.t > 0 || sim.error) setStarted(true);
         }
         if (sim.t !== paintedT.current) paintCanvases(sim);
-        if (liveStale.current && now - liveAt.current >= LIVE_INTERVAL_MS) paintLive(sim, now);
+        if (liveDue(liveStale.current, runningRef.current, now, liveAt.current)) paintLive(sim, now);
       }
       last = now;
       frame = requestAnimationFrame(loop);
@@ -187,24 +214,41 @@ export function SimulationView({ phenomenon, params, running, speed, resetToken,
   return (
     <div className="left">
       <section ref={pendBox} className="stage" aria-label="Simulación del péndulo">
-        <canvas
-          ref={pendCanvas}
-          role="img"
-          aria-label="Péndulo: una bola colgada de un hilo que oscila, con θ = 0 en la vertical"
-          aria-describedby={liveId}
-        />
+        {canDraw ? (
+          <canvas
+            ref={pendCanvas}
+            role="img"
+            aria-label="Péndulo: una bola colgada de un hilo que oscila, con θ = 0 en la vertical"
+            aria-describedby={liveId}
+          />
+        ) : (
+          <div role="status" className="canvas-off">
+            <Monitor className="ic canvas-off-ic" weight="regular" aria-hidden="true" />
+            <p className="canvas-off-title">{CANVAS_UNAVAILABLE_TITLE}</p>
+            <p className="canvas-off-text">{CANVAS_UNAVAILABLE_TEXT}</p>
+          </div>
+        )}
       </section>
       <section ref={chartBox} className="chartbox" aria-label="Gráfica del ángulo en el tiempo">
-        <canvas
-          ref={chartCanvas}
-          role="img"
-          aria-label={
-            showLinear
-              ? 'Gráfica del ángulo del péndulo en función del tiempo: curva simulada y curva punteada del ángulo pequeño'
-              : 'Gráfica del ángulo del péndulo en función del tiempo: curva simulada'
-          }
-        />
-        {!started && !running && <p className="hint">Presiona Play para empezar</p>}
+        {canDraw ? (
+          <canvas
+            ref={chartCanvas}
+            role="img"
+            aria-label={
+              showLinear
+                ? 'Gráfica del ángulo del péndulo en función del tiempo: curva simulada y curva punteada del ángulo pequeño'
+                : 'Gráfica del ángulo del péndulo en función del tiempo: curva simulada'
+            }
+          />
+        ) : (
+          <div className="canvas-off canvas-off-chart">
+            <ChartLine className="ic" weight="regular" aria-hidden="true" />
+            <p className="canvas-off-text">{CHART_UNAVAILABLE_TEXT}</p>
+          </div>
+        )}
+        {canDraw && !started && !running && <p className="hint">
+            Presiona <span lang="en">Play</span> para empezar
+          </p>}
       </section>
       <p ref={liveRef} id={liveId} className="sr-only" />
     </div>

@@ -16,7 +16,7 @@
   --accent-line: #a9bfe5;
   --on-accent: #fbfaf7;
   --curve-sim: #03379a;
-  --curve-linear: #e16c10;
+  --curve-linear: #c15d11;
   --focus: #a54c01;
   --warn-bg: #fff1cc;
   --warn-line: #b5820c;
@@ -45,7 +45,7 @@
     --accent-line: oklch(0.8 0.06 262);
     --on-accent: oklch(0.985 0.004 90);
     --curve-sim: oklch(0.38 0.17 262);
-    --curve-linear: oklch(0.66 0.17 50);
+    --curve-linear: oklch(0.59 0.15 50);
     --focus: oklch(0.52 0.137 50);
     --warn-bg: oklch(0.96 0.05 90);
     --warn-line: oklch(0.64 0.13 80);
@@ -99,14 +99,17 @@
   --thumb: 1.5rem;
   --track: 0.375rem;
   --icon: 1.25rem;
+  --icon-sm: 1rem;
+  --dot: 2rem;
   --swatch: 2.25rem;
 
   /* Medidas de la pantalla. */
   --w-drawer: 22rem;
   --w-aside: 20.5rem;
-  --w-aside-lab: 24rem;
+  --w-aside-lab: 22.5rem;
   --w-sheet: 46rem;
   --w-switch: 4.25rem;
+  --w-notice: 30rem;
   --min-app: 40rem;
   --gutter: var(--s5);
   --pend-h: 18rem;
