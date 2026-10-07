@@ -192,3 +192,16 @@ describe('aviso de límites del modelo', () => {
     expect(result.message).toContain('15°');
   });
 });
+
+describe('modo lineal: peor caso del esquema contra la integración RK4', () => {
+  it('con g = 1, L = 5 y b = 0,4 (ω_d mínima) la punteada sigue a la azul (error absoluto / φ₀ < 1e-6)', () => {
+    const p = { ...defaultParams(lineal.paramSchema), g: 1, L: 5, phi0: 15, b: 0.4 };
+    const sim = simulate(lineal, p, 30);
+    const amplitude = 15 * DEG_TO_RAD;
+    const worst = Math.max(...sim.samples.map((s) => Math.abs(s.values.theta - s.theory.theta) / amplitude));
+    expect(worst).toBeLessThan(1e-6);
+    // Y de verdad decae: la amplitud final es una fracción pequeña de la inicial.
+    const last = sim.samples[sim.samples.length - 1].values.theta;
+    expect(Math.abs(last)).toBeLessThan(0.01 * amplitude);
+  });
+});
