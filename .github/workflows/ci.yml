@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+# Mínimo privilegio: el flujo solo lee el repositorio; no necesita escribir ni usar secretos.
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -18,3 +22,14 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm audit --audit-level=high
+      # Pruebas de punta a punta contra el build de producción (con su CSP).
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: informe-e2e
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
