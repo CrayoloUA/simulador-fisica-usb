@@ -23,6 +23,7 @@ const THEME: CanvasTheme = {
   pivotRadius: 5,
   ballRadius: 22,
   ballPerSqrtKg: 8,
+  markSize: 44,
 };
 
 const LABELS: ChartLabels = { title: 'Ángulo (θ) en el tiempo (s)', simulated: 'Simulación', linear: 'Ángulo pequeño' };

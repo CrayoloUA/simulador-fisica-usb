@@ -29,6 +29,8 @@ export interface CanvasTheme {
   pivotRadius: number;
   ballRadius: number;
   ballPerSqrtKg: number;
+  /** Lado del objetivo táctil de las marcas de ayuda (--mark), en px. */
+  markSize: number;
 }
 
 /** Lo único que se necesita de `getComputedStyle`: así se puede probar sin navegador. */
@@ -86,5 +88,6 @@ export function readCanvasTheme(styles: StyleReader, rootFontPx = 16): CanvasThe
     pivotRadius: px('--pivot-r'),
     ballRadius: px('--ball-r'),
     ballPerSqrtKg: px('--ball-k'),
+    markSize: px('--mark'),
   };
 }

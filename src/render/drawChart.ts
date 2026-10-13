@@ -1,6 +1,9 @@
 import { DEG_TO_RAD } from '../engine/numbers';
 import type { Sample } from '../engine/types';
+import { chartLayout, type ChartLabels, type MeasureText } from './chartLayout';
 import type { CanvasTheme } from './theme';
+
+export type { ChartLabels } from './chartLayout';
 
 const WINDOW_SECONDS = 10;
 const TICK_SECONDS = 2;
@@ -8,15 +11,6 @@ const MAX_POINTS = 300;
 /** El eje θ llega a este múltiplo del ángulo inicial, redondeado hacia arriba a pasos de 5°. */
 const Y_HEADROOM = 1.12;
 const Y_STEP_DEG = 5;
-/** Por debajo de este ancho la leyenda baja a una segunda fila. */
-const NARROW_PX = 560;
-
-/** Textos del dibujo: los pone la interfaz (lenguaje para niños), el dibujo solo los coloca. */
-export interface ChartLabels {
-  title: string;
-  simulated: string;
-  linear: string;
-}
 
 type Mapper = (value: number) => number;
 
@@ -67,6 +61,9 @@ export function chartYMaxDeg(amplitudeRad: number): number {
  * Dibuja θ(t) en el rectángulo `width` × `height` (px CSS; quien llama aplica la escala del
  * dispositivo). La simulada (sólida, azul) va primero y la curva de comparación (punteada, naranja)
  * encima, para que ambas se vean cuando coinciden. Un punto marca el instante actual.
+ * Con `markSize` > 0 (marcas de ayuda encendidas) la leyenda se muestra siempre y deja sitio a una
+ * marca junto a cada nombre y al título; la disposición sale de `chartLayout`, igual que la capa
+ * de marcas.
  */
 export function drawChart(
   ctx: CanvasRenderingContext2D,
@@ -75,19 +72,22 @@ export function drawChart(
   samples: Sample[],
   amplitudeRad: number,
   theme: CanvasTheme,
-  options: { showLinear?: boolean; labels: ChartLabels },
+  options: { showLinear?: boolean; labels: ChartLabels; markSize?: number },
 ): void {
-  const { showLinear = false, labels } = options;
+  const { showLinear = false, labels, markSize = 0 } = options;
   ctx.clearRect(0, 0, width, height);
   if (samples.length === 0) return;
 
-  const { s1, s2, s4, s5, s6, s7 } = theme.space;
+  const { s1, s2, s4 } = theme.space;
   const f = theme.textSize;
   const regular = `400 ${f}px ${theme.fontSans}`;
   const semibold = `600 ${f}px ${theme.fontSans}`;
-  const narrow = width < NARROW_PX;
-  // En un ancho estrecho la leyenda ocupa una fila propia bajo el título.
-  const pad = { left: s7 + s2, right: s4, top: s6 + s2 + (showLinear && narrow ? s5 : 0), bottom: s6 };
+  const measure: MeasureText = (text, weight) => {
+    ctx.font = weight === 'regular' ? regular : semibold;
+    return ctx.measureText(text).width;
+  };
+  const layout = chartLayout(width, height, theme, labels, { showLinear, markSize }, measure);
+  const { pad } = layout;
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
 
@@ -126,7 +126,7 @@ export function drawChart(
   ctx.fillStyle = theme.ink;
   ctx.font = semibold;
   ctx.textAlign = 'left';
-  ctx.fillText(labels.title, s4, s5 - s1);
+  ctx.fillText(labels.title, s4, layout.titleBaselineY);
   ctx.fillStyle = theme.inkSoft;
   ctx.font = regular;
   ctx.textAlign = 'right';
@@ -153,28 +153,20 @@ export function drawChart(
   ctx.stroke();
   ctx.restore();
 
-  // Leyenda (solo al comparar): muestra del trazo, sólido o punteado, y nombre.
-  if (showLinear) {
-    const swatch = s6 + s1;
-    const entry = (originX: number, rowY: number, label: string, color: string, strokeW: number, dash: number[]) => {
-      ctx.strokeStyle = color;
-      ctx.lineWidth = strokeW;
-      ctx.setLineDash(dash);
-      ctx.beginPath();
-      ctx.moveTo(originX, rowY - s1);
-      ctx.lineTo(originX + swatch, rowY - s1);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = theme.inkSoft;
-      ctx.textAlign = 'left';
-      ctx.fillText(label, originX + swatch + s2, rowY);
-    };
+  // Leyenda (al comparar, o siempre con las marcas encendidas): muestra del trazo, sólido o punteado, y nombre.
+  for (const item of layout.legend) {
+    const isSim = item.key === 'simulated';
+    ctx.strokeStyle = isSim ? theme.curveSim : theme.curveLinear;
+    ctx.lineWidth = isSim ? theme.stroke.curve : theme.stroke.curveLinear;
+    ctx.setLineDash(isSim ? [] : theme.dashLong);
+    ctx.beginPath();
+    ctx.moveTo(item.x, item.baselineY - s1);
+    ctx.lineTo(item.x + item.swatchW, item.baselineY - s1);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = theme.inkSoft;
     ctx.font = regular;
-    const simWidth = swatch + s2 + ctx.measureText(labels.simulated).width;
-    const linWidth = swatch + s2 + ctx.measureText(labels.linear).width;
-    const rowY = narrow ? s6 + s2 + s1 : s5 - s1;
-    const originX = narrow ? s4 : width - pad.right - simWidth - s5 - linWidth;
-    entry(originX, rowY, labels.simulated, theme.curveSim, theme.stroke.curve, []);
-    entry(originX + simWidth + s5, rowY, labels.linear, theme.curveLinear, theme.stroke.curveLinear, theme.dashLong);
+    ctx.textAlign = 'left';
+    ctx.fillText(item.label, item.x + item.swatchW + s2, item.baselineY);
   }
 }

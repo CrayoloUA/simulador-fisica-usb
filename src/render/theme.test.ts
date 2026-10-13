@@ -47,6 +47,7 @@ describe('readCanvasTheme', () => {
     '--dash2': '9 6',
     '--ball-r': '22px',
     '--ball-k': '8px',
+    '--mark': '2.75rem',
   };
   const styles = { getPropertyValue: (name: string) => vars[name] ?? '' };
 
@@ -73,6 +74,12 @@ describe('readCanvasTheme', () => {
     expect(theme.dashLong).toEqual([9, 6]);
     expect(theme.ballRadius).toBe(22);
     expect(theme.ballPerSqrtKg).toBe(8);
+  });
+
+  it('lee el lado de las marcas de ayuda (--mark) y el token real mide 44 px', () => {
+    expect(readCanvasTheme(styles).markSize).toBe(44);
+    expect(tokensCss).toMatch(/--mark:\s*2\.75rem;/);
+    expect(tokensCss).toMatch(/--mark-ic:\s*1\.75rem;/);
   });
 });
 
@@ -147,4 +154,30 @@ describe('contraste de la curva punteada de comparación', () => {
     expect(relativeLuminance(srgbFromHex(sim.hex))).toBeLessThan(relativeLuminance(srgbFromHex(linear.hex)) / 3);
     expect(contrast(srgbFromHex(sim.hex), srgbFromHex(linear.hex))).toBeGreaterThanOrEqual(2.2);
   });
+});
+
+describe('contraste de las marcas de ayuda y su aviso', () => {
+  // El borde y el ? de la marca (azul de acento) son gráficos: 3:1 como mínimo (WCAG 1.4.11). Abierta, el ?
+  // claro va sobre el azul lleno y se lee como texto: 4,5:1. El aviso fijo es texto sobre el papel.
+  const surface = tokenValues('surface');
+  const sunken = tokenValues('paper-sunken');
+  const paper = tokenValues('paper');
+  const accent = tokenValues('accent');
+  const onAccent = tokenValues('on-accent');
+  const inkSoft = tokenValues('ink-soft');
+  const rgbOf = (token: { hex: string; oklch: string }, mode: 'hex' | 'oklch') =>
+    mode === 'hex' ? srgbFromHex(token.hex) : srgbFromOklch(token.oklch);
+
+  for (const mode of ['hex', 'oklch'] as const) {
+    it(`en ${mode}: la marca contrasta al menos 3:1 sobre la superficie del dibujo y sobre el panel gris`, () => {
+      expect(contrast(rgbOf(accent, mode), rgbOf(surface, mode))).toBeGreaterThanOrEqual(3);
+      expect(contrast(rgbOf(accent, mode), rgbOf(sunken, mode))).toBeGreaterThanOrEqual(3);
+      expect(contrast(rgbOf(accent, mode), rgbOf(paper, mode))).toBeGreaterThanOrEqual(3);
+    });
+
+    it(`en ${mode}: la marca abierta (? claro sobre azul) llega a 4,5:1 y el aviso sobre el papel también`, () => {
+      expect(contrast(rgbOf(onAccent, mode), rgbOf(accent, mode))).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(rgbOf(inkSoft, mode), rgbOf(paper, mode))).toBeGreaterThanOrEqual(4.5);
+    });
+  }
 });

@@ -28,12 +28,20 @@ export interface PendulumLayout {
  * Escala el péndulo al área disponible: el hilo mide lo que cabe en alto y lo que deja caber la
  * oscilación completa en el ancho, y se acorta un poco con hilos cortos. Depende del ángulo inicial
  * y no del instante, para que la escala no vibre mientras oscila.
+ * `reserveBottom` deja libre una franja abajo (px): con las marcas de ayuda encendidas, ahí va la
+ * marca de la línea vertical, fuera de todo lo que se mueve. En la pantalla normal es 0.
  */
-export function pendulumLayout(width: number, height: number, params: Params, theme: CanvasTheme): PendulumLayout {
+export function pendulumLayout(
+  width: number,
+  height: number,
+  params: Params,
+  theme: CanvasTheme,
+  reserveBottom = 0,
+): PendulumLayout {
   const { s2, s4, s6, s8 } = theme.space;
   const bobRadius = theme.ballRadius + theme.ballPerSqrtKg * Math.sqrt(params.m);
   const pivotY = s6 + s2;
-  const byHeight = height - pivotY - bobRadius - s4;
+  const byHeight = height - pivotY - bobRadius - s4 - reserveBottom;
   const swing = Math.max(params.phi0 * DEG_TO_RAD, MIN_SWING_RAD);
   const byWidth = (width / 2 - bobRadius - s4) / Math.sin(swing);
   const lengthMax = Math.max(s8, Math.min(byHeight, byWidth));
@@ -42,7 +50,8 @@ export function pendulumLayout(width: number, height: number, params: Params, th
 
 /**
  * Dibuja el péndulo en el rectángulo `width` × `height` (px CSS; quien llama aplica la escala del
- * dispositivo para que sea nítido). Los colores y medidas salen del tema.
+ * dispositivo para que sea nítido). Los colores y medidas salen del tema. `reserveBottom`: ver
+ * `pendulumLayout`.
  */
 export function drawPendulum(
   ctx: CanvasRenderingContext2D,
@@ -51,9 +60,10 @@ export function drawPendulum(
   state: State,
   params: Params,
   theme: CanvasTheme,
+  reserveBottom = 0,
 ): void {
   ctx.clearRect(0, 0, width, height);
-  const { pivotX, pivotY, lengthPx, bobRadius } = pendulumLayout(width, height, params, theme);
+  const { pivotX, pivotY, lengthPx, bobRadius } = pendulumLayout(width, height, params, theme, reserveBottom);
   const { s2, s6 } = theme.space;
   const phi0 = params.phi0 * DEG_TO_RAD;
   const bobX = pivotX + lengthPx * Math.sin(state.theta);
