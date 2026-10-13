@@ -1,4 +1,6 @@
 import { formatNumber } from '../engine/numbers';
+import { elementHelp, resultExtras } from './elementHelp';
+import { theoryEquations } from './equations';
 import type { LabContent } from './types';
 
 const SIGN_CONVENTION =
@@ -12,11 +14,7 @@ export const simplePendulumContent: LabContent = {
   theoryByModel: {
     lineal: {
       title: 'Ángulo pequeño (modelo lineal)',
-      equations: [
-        "θ'' + (g/L)·θ + b·θ' = 0",
-        'θ(t) = A·cos(ω₀t + φ), con ω₀ = √(g/L) (sin fricción, b = 0)',
-        'T₀ = 2π√(L/g)',
-      ],
+      equations: theoryEquations.lineal,
       validity:
         'Parte de la aproximación sen θ ≈ θ, que solo vale para ángulos muy pequeños: por debajo de 10°, ' +
         'idealmente tendiendo a 0. Con ángulos mayores el período real es más largo que T₀ y el modelo se equivoca.',
@@ -30,13 +28,7 @@ export const simplePendulumContent: LabContent = {
     },
     'no-lineal': {
       title: 'Real (modelo no lineal)',
-      equations: [
-        "θ'' + (g/L)·sen θ + b·θ' = 0",
-        'T(φ₀) = T₀ · [1 + (1/2)²·sen²(φ₀/2) + (1·3 / 2·4)²·sen⁴(φ₀/2) + (1·3·5 / 2·4·6)²·sen⁶(φ₀/2) + …]',
-        'T(φ₀) = T₀ · Σ [ (2n)! / (2²ⁿ·(n!)²) ]² · sen²ⁿ(φ₀/2), con n desde 0 hasta ∞, y T₀ = 2π√(L/g)',
-        'T ≈ T₀ · (1 + φ₀²/16), con φ₀ en radianes (solo el primer término corrector)',
-        'La misma serie es T = T₀ · 2K(k)/π, con k = sen(φ₀/2) (K: integral elíptica de primera especie); el programa la calcula con la media aritmético-geométrica',
-      ],
+      equations: theoryEquations.noLineal,
       validity:
         'No supone sen θ ≈ θ, así que sirve también para ángulos grandes (hasta 60°). El período deja de ser ' +
         '2π√(L/g): crece con φ₀. Por debajo de 10° coincide con el modelo lineal; por encima, la diferencia ' +
@@ -66,7 +58,8 @@ export const simplePendulumContent: LabContent = {
       role:
         'Es la amplitud inicial. En el modelo lineal (hasta 15°) el período no depende de ella; en el modelo no lineal (hasta 60°) sí: a mayor ángulo, mayor período.',
       effect:
-        'En el modelo no lineal, si la aumentas el período crece y la curva punteada se separa de la azul; en el lineal solo cambia la altura de las ondas. Si fuera 0°, el péndulo quedaría quieto.',
+        'En el modelo no lineal, si la aumentas el período crece y la curva punteada se separa de la azul; en el lineal solo cambia la altura de las ondas. Si fuera 0°, el péndulo quedaría quieto. ' +
+        '¿Y por qué no más de 60°? La cuenta seguiría valiendo (a 90° el período es 18 % más largo), pero con un hilo de verdad, pasando de 90° la bolita cae en vez de balancearse porque el hilo no puede empujar; el límite de 60° es una decisión del simulador para que el hilo siempre quede tenso.',
     },
     {
       paramKey: 'g',
@@ -136,6 +129,8 @@ export const simplePendulumContent: LabContent = {
         'Qué tan rápido gira la fase del movimiento, en radianes por segundo. Se relaciona con la frecuencia por ω₀ = 2π·f.',
     },
   ],
+  resultExtras,
+  elementHelp,
   formula: {
     template: 'T₀ = 2π√(L/g)',
     describe: (params, results) =>
@@ -225,7 +220,7 @@ export const simplePendulumContent: LabContent = {
           correctOptionId: 'igual',
           feedback: {
             aumento: 'Revisa de nuevo: el período no depende de la masa (solo de L, g y el ángulo), así que no debería haber aumentado.',
-            disminuyo: 'Revisa de nuevo: el período no depende de la masa (solo de L, g y el ángulo), así que no debería haber disminuido.',
+            disminuyo: 'Mira otra vez: el período no depende de la masa (solo de L, g y el ángulo), así que no debería haber disminuido.',
             igual: 'Correcto: el período no depende de la masa; solo depende de L, de g y del ángulo inicial.',
           },
         },
@@ -323,7 +318,7 @@ export const simplePendulumContent: LabContent = {
               'Revisa de nuevo: con menos gravedad, la fuerza que regresa el péndulo al centro es más débil, así que tarda MÁS, no menos.',
             mayor:
               'Correcto: T es proporcional a 1/√g (la gravedad está en el denominador, dentro de la raíz), así que con menos g, T es mayor.',
-            igual: 'Revisa de nuevo: T sí depende de g. Compara los dos valores de T que anotaste.',
+            igual: 'Fíjate: T sí depende de g. Compara los dos valores de T que anotaste.',
           },
         },
       ],

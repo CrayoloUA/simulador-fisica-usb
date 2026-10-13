@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { pendulumModels } from '../engine/phenomena/pendulum';
 import { simplePendulum } from '../engine/phenomena/simplePendulum';
 import { defaultParams } from '../engine/validate';
+import { equationPlainText } from './equations';
 import { simplePendulumContent } from './simplePendulumContent';
 
 function outputsFor(overrides: Record<string, number>): Record<string, number> {
@@ -186,14 +187,14 @@ describe('simplePendulumContent: teoría por modelo (HU-14, HU-16, HU-17)', () =
   const models = ['lineal', 'no-lineal'] as const;
   const textOf = (model: (typeof models)[number]) => {
     const t = simplePendulumContent.theoryByModel[model];
-    return [t.title, ...t.equations, t.validity, t.chartOrigin, t.signConvention].join(' ');
+    return [t.title, ...t.equations.map(equationPlainText), t.validity, t.chartOrigin, t.signConvention].join(' ');
   };
 
   it.each(models)('el modelo %s tiene título, ecuaciones y los tres textos explicativos no vacíos', (model) => {
     const t = simplePendulumContent.theoryByModel[model];
     expect(t.title.trim()).not.toBe('');
     expect(t.equations.length).toBeGreaterThanOrEqual(2);
-    for (const equation of t.equations) expect(equation.trim()).not.toBe('');
+    for (const equation of t.equations) expect(equationPlainText(equation).trim()).not.toBe('');
     for (const text of [t.validity, t.chartOrigin, t.signConvention]) expect(text.trim()).not.toBe('');
   });
 
@@ -217,8 +218,8 @@ describe('simplePendulumContent: teoría por modelo (HU-14, HU-16, HU-17)', () =
   });
 
   it('las ecuaciones incluyen la fricción y, en el modo no lineal, sen θ y el período con K(k)', () => {
-    const lineal = simplePendulumContent.theoryByModel.lineal.equations.join(' ');
-    const noLineal = simplePendulumContent.theoryByModel['no-lineal'].equations.join(' ');
+    const lineal = simplePendulumContent.theoryByModel.lineal.equations.map(equationPlainText).join(' ');
+    const noLineal = simplePendulumContent.theoryByModel['no-lineal'].equations.map(equationPlainText).join(' ');
     expect(lineal).toContain('b·θ');
     expect(lineal).toContain('θ(t) = A·cos');
     expect(noLineal).toContain('sen θ');
@@ -228,7 +229,7 @@ describe('simplePendulumContent: teoría por modelo (HU-14, HU-16, HU-17)', () =
   });
 
   it('el modo no lineal muestra la serie del profesor, su suma y el primer término', () => {
-    const equations = simplePendulumContent.theoryByModel['no-lineal'].equations.join(' | ');
+    const equations = simplePendulumContent.theoryByModel['no-lineal'].equations.map(equationPlainText).join(' | ');
     expect(equations).toContain('(1/2)²·sen²(φ₀/2)');
     expect(equations).toContain('(1·3 / 2·4)²·sen⁴(φ₀/2)');
     expect(equations).toContain('(1·3·5 / 2·4·6)²·sen⁶(φ₀/2)');
