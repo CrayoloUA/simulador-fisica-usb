@@ -63,6 +63,6 @@ export async function fijarDeslizador(page: Page, nombre: string | RegExp, valor
 }
 
 export async function abrirMasOpciones(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Más opciones' }).click();
+  await page.getByRole('button', { name: 'Más opciones', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Más opciones' })).toBeFocused();
 }

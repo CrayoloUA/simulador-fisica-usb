@@ -49,7 +49,7 @@ test.describe('Experimentos guiados', () => {
 
     // 4. Concluir.
     await expect(leccion.getByRole('heading', { name: 'Lo que aprendiste' })).toBeVisible();
-    await expect(leccion.getByText(/Tu predicción inicial fue correcta/)).toBeVisible();
+    await expect(leccion.getByText(/Tu predicción salió bien/)).toBeVisible();
     await expect(leccion.getByText(/T por √4 = 2/)).toBeVisible();
     sinProblemas(problemas);
   });
@@ -68,8 +68,8 @@ test.describe('Experimentos guiados', () => {
     await leccion.getByRole('button', { name: 'Continuar' }).click();
 
     await expect(leccion.getByRole('heading', { name: 'Lo que aprendiste' })).toBeVisible();
-    await expect(leccion.getByText(/predicción inicial/)).toBeVisible();
-    await expect(leccion).not.toContainText('inicial fue correcta');
+    await expect(leccion.getByText(/no coincidió con lo que viste/)).toBeVisible();
+    await expect(leccion).not.toContainText('salió bien');
     sinProblemas(problemas);
   });
 

@@ -83,7 +83,7 @@ test.describe('Robustez y seguridad (regresión de las Fases 8 y 9)', () => {
         }, hostil);
     }
     // La página sigue viva (responde a un clic) y sin pantalla de error.
-    await expect(page.getByRole('alert').filter({ hasText: 'Algo salió mal' })).toHaveCount(0);
+    await expect(page.getByRole('alert').filter({ hasText: 'El simulador se trabó' })).toHaveCount(0);
     await page.getByRole('radiogroup', { name: 'Velocidad de la simulación' }).getByText('1×', { exact: true }).click();
     const antes = await tiempoSimulado(page);
     await expect.poll(() => tiempoSimulado(page), { timeout: 8000 }).toBeGreaterThan(antes);
@@ -99,7 +99,7 @@ test.describe('Robustez y seguridad (regresión de las Fases 8 y 9)', () => {
     });
     await page.getByRole('button', { name: /^Luna:/ }).click();
 
-    const aviso = page.getByRole('alert').filter({ hasText: 'Algo salió mal' });
+    const aviso = page.getByRole('alert').filter({ hasText: 'El simulador se trabó' });
     await expect(aviso).toBeVisible();
     await expect(aviso.getByRole('button', { name: 'Recargar la página' })).toBeVisible();
     await expect(page.locator('body')).not.toContainText('SECRETO-INTERNO');
