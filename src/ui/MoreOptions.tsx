@@ -3,6 +3,8 @@ import type { Ref } from 'react';
 import type { PresetValue } from '../content/types';
 import type { PendulumModel } from '../engine/phenomena/pendulum';
 import type { ParamSpec, Params } from '../engine/types';
+import { ELEMENT_ID } from '../content/elementHelp';
+import { ExplainMark } from './ExplainMark';
 import { SPEEDS, speedLabel } from './kidLabels';
 import { LinearizationToggle } from './LinearizationToggle';
 import { ModelSelector } from './ModelSelector';
@@ -72,7 +74,10 @@ export function MoreOptions({
             <ModelSelector model={model} onChange={onModelChange} maxPhi0={maxPhi0} />
           </section>
           <section className="dsec">
-            <LinearizationToggle showLinear={showLinear} onToggle={onToggleLinear} />
+            <div className="withmark">
+              <LinearizationToggle showLinear={showLinear} onToggle={onToggleLinear} />
+              <ExplainMark id={ELEMENT_ID.comparar} />
+            </div>
             <p className="note">Muestra una curva punteada naranja en la gráfica.</p>
           </section>
           {specs.map((spec) => (
@@ -86,7 +91,10 @@ export function MoreOptions({
             </section>
           ))}
           <section className="dsec" aria-labelledby="h-vel">
-            <h3 id="h-vel">Velocidad de la simulación</h3>
+            <div className="withmark">
+              <h3 id="h-vel">Velocidad de la simulación</h3>
+              <ExplainMark id={ELEMENT_ID.velocidad} />
+            </div>
             <Segmented
               name="velocidad"
               className="choice"
@@ -101,10 +109,13 @@ export function MoreOptions({
             <CuriousData results={results} />
           </section>
           <section className="dsec">
-            <button type="button" className="btn sec" aria-haspopup="dialog" onClick={(event) => onOpenTheory(event.currentTarget)}>
-              <BookOpen className="ic" weight="bold" aria-hidden="true" />
-              Teoría
-            </button>
+            <div className="withmark">
+              <button type="button" className="btn sec" aria-haspopup="dialog" onClick={(event) => onOpenTheory(event.currentTarget)}>
+                <BookOpen className="ic" weight="bold" aria-hidden="true" />
+                Teoría
+              </button>
+              <ExplainMark id={ELEMENT_ID.teoria} />
+            </div>
           </section>
         </div>
       </div>

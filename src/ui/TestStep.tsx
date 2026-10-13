@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 import type { ExperimentStep } from '../content/types';
 import type { Params } from '../engine/types';
 import { ContinueButton } from './ContinueButton';
+import { LangText } from './LangText';
 
 interface Props {
   step: ExperimentStep;
@@ -23,7 +24,9 @@ export function TestStep({ step, inlineItems, onPrepare, onContinue }: Props) {
 
   return (
     <div className="step">
-      <p className="instruction">{step.instruction}</p>
+      <p className="instruction">
+        <LangText text={step.instruction} />
+      </p>
       {inlineItems}
       <div className="lesson-actions">
         {prepareParams && (
@@ -43,11 +46,12 @@ export function TestStep({ step, inlineItems, onPrepare, onContinue }: Props) {
       {/* La región existe siempre y solo cambia su contenido: así el lector de pantalla lo anuncia. */}
       {prepareParams && (
         <p role="status" className="prepared">
+          {/* El mensaje es lo que aparece (con un fundido corto): la región de arriba no se mueve. */}
           {prepared && (
-            <>
+            <span className="prepared-msg">
               <CheckCircle className="ic" weight="fill" aria-hidden="true" />
               Valores preparados
-            </>
+            </span>
           )}
         </p>
       )}

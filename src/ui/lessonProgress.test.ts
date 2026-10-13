@@ -93,6 +93,12 @@ describe('answerVerdict y predictionVerdict', () => {
     expect(predictionVerdict(true).tone).toBe('ok');
     expect(predictionVerdict(false).tone).toBe('info');
   });
+
+  it('los textos hablan de lo que el niño vio, sin consuelo de plantilla', () => {
+    expect(predictionVerdict(true).text).toBe('Tu predicción salió bien.');
+    expect(predictionVerdict(false).text).toBe('Tu predicción no coincidió con lo que viste. Para eso se hacen las pruebas.');
+    expect(predictionVerdict(false).text).not.toMatch(/parte de aprender/);
+  });
 });
 
 describe('explanationText', () => {
@@ -122,7 +128,7 @@ describe('explanationText', () => {
           const verdict = answerVerdict(id, question.correctOptionId)!;
           const shown = explanationText(text, verdict);
           expect(shown.length).toBeGreaterThan(10);
-          expect(shown).not.toMatch(/^(Correcto|No|No tanto|Casi|Revisa de nuevo):/);
+          expect(shown).not.toMatch(/^(Correcto|No|No tanto|Casi|Revisa de nuevo|Mira otra vez|Fíjate):/);
         }
       }
     }
@@ -132,6 +138,12 @@ describe('explanationText', () => {
 describe('verdictText', () => {
   it('una respuesta correcta se llama "Correcto"', () => {
     expect(verdictText('Correcto: T es el tiempo.', 'correct')).toEqual({ label: 'Correcto', body: 'T es el tiempo.' });
+  });
+
+  it('"Mira otra vez:" y "Fíjate:" también son el veredicto de una respuesta equivocada', () => {
+    expect(verdictText('Mira otra vez: T sí depende de L.', 'wrong')).toEqual({ label: 'Mira otra vez', body: 'T sí depende de L.' });
+    expect(verdictText('Fíjate: T sí depende de g.', 'wrong')).toEqual({ label: 'Fíjate', body: 'T sí depende de g.' });
+    expect(verdictText('Fíjate: algo.', 'correct')).toEqual({ label: 'Correcto', body: 'Fíjate: algo.' });
   });
 
   it('"Casi:" y "Revisa de nuevo:" son el veredicto en vez de un "No" seco', () => {
@@ -168,7 +180,7 @@ describe('verdictText', () => {
         }
       }
     }
-    expect([...labels].sort()).toEqual(['Casi', 'Correcto', 'No', 'No tanto', 'Revisa de nuevo']);
+    expect([...labels].sort()).toEqual(['Casi', 'Correcto', 'Fíjate', 'Mira otra vez', 'No', 'No tanto', 'Revisa de nuevo']);
   });
 });
 

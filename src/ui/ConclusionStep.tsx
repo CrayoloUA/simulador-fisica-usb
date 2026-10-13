@@ -1,4 +1,4 @@
-import { CheckCircle, Lightbulb } from '@phosphor-icons/react';
+import { CheckCircle, Info } from '@phosphor-icons/react';
 import { isPredictionCorrect, type FlowState } from '../content/experimentFlow';
 import type { Experiment } from '../content/types';
 import { predictionVerdict } from './lessonProgress';
@@ -15,7 +15,7 @@ interface Props {
  */
 export function ConclusionStep({ experiment, flow, onBack }: Props) {
   const verdict = predictionVerdict(isPredictionCorrect(flow, experiment));
-  const Icon = verdict.tone === 'ok' ? CheckCircle : Lightbulb;
+  const Icon = verdict.tone === 'ok' ? CheckCircle : Info;
   return (
     <div className="step">
       <p className="verdict" data-tone={verdict.tone}>

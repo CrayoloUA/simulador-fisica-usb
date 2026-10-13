@@ -8,8 +8,8 @@ import { Component, type ReactNode } from 'react';
 export function ErrorFallback() {
   return (
     <main className="app-error" role="alert">
-      <h1>Algo salió mal</h1>
-      <p>El simulador tuvo un problema y no pudo seguir. Recarga la página para empezar de nuevo.</p>
+      <h1>El simulador se trabó</h1>
+      <p>No pudo seguir funcionando. Recarga la página para volver a empezar.</p>
       <button type="button" onClick={() => window.location.reload()}>
         Recargar la página
       </button>

@@ -99,7 +99,13 @@ export function LessonCard({
           />
         )}
         {active?.flow.phase === 'check' && (
-          <CheckStep experiment={active.experiment} flow={active.flow} onAnswer={onAnswerCheck} onContinue={onAdvance} />
+          <CheckStep
+            key={active.flow.questionIndex}
+            experiment={active.experiment}
+            flow={active.flow}
+            onAnswer={onAnswerCheck}
+            onContinue={onAdvance}
+          />
         )}
         {active?.flow.phase === 'conclusion' && (
           <ConclusionStep experiment={active.experiment} flow={active.flow} onBack={onExit} />

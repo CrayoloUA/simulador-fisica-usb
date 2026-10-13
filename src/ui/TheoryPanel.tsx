@@ -1,8 +1,14 @@
 import { X } from '@phosphor-icons/react';
 import { useEffect, useRef } from 'react';
+import { equationPlainText } from '../content/equations';
+import { glossary } from '../content/glossary';
 import type { ModelTheory } from '../content/types';
 import { formatNumber } from '../engine/numbers';
+import { Formula } from './Formula';
+import { GlossaryList } from './GlossaryList';
 import type { HelpEntry } from './helpEntries';
+import { LangText } from './LangText';
+import { usePresence } from './usePresence';
 
 interface Props {
   open: boolean;
@@ -21,11 +27,14 @@ const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabi
  * Hoja de Teoría: ventana modal con los textos del contenido. Al abrir, el foco pasa al título;
  * Tab y Shift+Tab giran dentro de la hoja; el fondo queda `inert` (lo hace `App`) y Escape o el
  * clic en el fondo la cierran (también lo gestiona `App`, junto con devolver el foco). Cerrada
- * no se dibuja.
+ * no se dibuja; al cerrarse se queda puesta lo que dura su salida (más corta que la entrada), ya
+ * inerte, y el foco vuelve al botón al instante.
  */
 export function TheoryPanel({ open, onClose, theory, results, formulaText, entries }: Props) {
   const sheetRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const phase = usePresence(open, sheetRef);
+  const closing = phase === 'closing';
 
   useEffect(() => {
     if (open) titleRef.current?.focus({ preventScroll: true });
@@ -53,12 +62,20 @@ export function TheoryPanel({ open, onClose, theory, results, formulaText, entri
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open]);
 
-  if (!open) return null;
+  if (phase === 'closed') return null;
 
   return (
     <>
-      <div className="scrim" onClick={onClose} />
-      <section ref={sheetRef} className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div className="scrim" data-state={closing ? 'closing' : undefined} inert={closing} onClick={onClose} />
+      <section
+        ref={sheetRef}
+        className="sheet"
+        data-state={closing ? 'closing' : undefined}
+        inert={closing}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sheet-title"
+      >
         <div className="sheet-head">
           <h2 id="sheet-title" ref={titleRef} tabIndex={-1} className="focus-target">
             Teoría
@@ -76,11 +93,11 @@ export function TheoryPanel({ open, onClose, theory, results, formulaText, entri
             <ul role="list">
               {entries.map((entry) => (
                 <li key={entry.id}>
-                  <b>{entry.title}</b>
+                  <h4>{entry.title}</h4>
                   {entry.sections.map((section, index) => (
                     <p key={index}>
                       {section.heading && <span className="mut">{section.heading}: </span>}
-                      {section.text}
+                      <LangText text={section.text} />
                     </p>
                   ))}
                 </li>
@@ -89,10 +106,12 @@ export function TheoryPanel({ open, onClose, theory, results, formulaText, entri
           </section>
           <section>
             <h3>Cómo se calcula: {theory.title}</h3>
-            {theory.equations.map((equation) => (
-              <p key={equation} className="eq">
-                {equation}
-              </p>
+            {theory.equations.map((equation, index) => (
+              <Formula
+                key={equationPlainText(equation)}
+                equation={equation}
+                label={`Ecuación ${index + 1} de ${theory.equations.length}`}
+              />
             ))}
             <p className="mut">{formulaText}</p>
             <p className="mut">
@@ -112,6 +131,10 @@ export function TheoryPanel({ open, onClose, theory, results, formulaText, entri
           <section>
             <h3>Cómo se mide el ángulo</h3>
             <p>{theory.signConvention}</p>
+          </section>
+          <section>
+            <h3>Palabras que conviene conocer</h3>
+            <GlossaryList terms={glossary} />
           </section>
         </div>
       </section>

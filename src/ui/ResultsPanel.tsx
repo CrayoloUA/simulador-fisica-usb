@@ -1,4 +1,8 @@
+import { useContext } from 'react';
 import { resultsSummary } from './announcements';
+import { ExplainContext } from './ExplainContext';
+import { ExplainMark } from './ExplainMark';
+import { resultHelpId } from './helpEntries';
 import { CURIOUS_RESULT_KEYS, RESULT_LABELS, formatResult } from './kidLabels';
 import { useDebouncedValue } from './useDebouncedValue';
 
@@ -38,12 +42,16 @@ export function ResultsPanel({ results, highlightedKey }: Props) {
         <p className="rbig">
           {formatResult('T', results.T)} <span className="unit">{period.unit}</span>
         </p>
+        <ExplainMark id={resultHelpId('T')} className="mark-result" />
       </div>
       <p className={highlightedKey === 'f' ? 'rf hl' : 'rf'}>
-        {frequency.label} <span className="sym">({frequency.symbol})</span>{' '}
-        <b>
-          {formatResult('f', results.f)} {frequency.unit}
-        </b>
+        <span>
+          {frequency.label} <span className="sym">({frequency.symbol})</span>{' '}
+          <b>
+            {formatResult('f', results.f)} {frequency.unit}
+          </b>
+        </span>
+        <ExplainMark id={resultHelpId('f')} className="mark-result" />
       </p>
       <p role="status" aria-atomic="true" className="sr-only">
         {summary}
@@ -54,10 +62,12 @@ export function ResultsPanel({ results, highlightedKey }: Props) {
 
 /** Datos para curiosos: lo que no hace falta para entender el péndulo, pero que algunos querrán ver. */
 export function CuriousData({ results, highlightedKey, keys = CURIOUS_RESULT_KEYS }: CuriousProps) {
+  const explain = useContext(ExplainContext);
   return (
     <dl className="curios">
       {keys.map((key) => {
         const label = RESULT_LABELS[key];
+        const helpId = resultHelpId(key);
         return (
           <div key={key} className={highlightedKey === key ? 'hl' : undefined}>
             <dt>
@@ -67,6 +77,12 @@ export function CuriousData({ results, highlightedKey, keys = CURIOUS_RESULT_KEY
               {formatResult(key, results[key])} <span className="unit">{label.unit}</span>
             </dd>
             <dd className="d">{label.note}</dd>
+            {/* La marca va en su propio <dd>: dentro de <dl> solo caben <dt> y <dd>. Sin marcas no hay <dd>. */}
+            {explain.active && explain.entries.has(helpId) && (
+              <dd className="m">
+                <ExplainMark id={helpId} className="mark-curio" />
+              </dd>
+            )}
           </div>
         );
       })}

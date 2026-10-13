@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'react';
 import type { PresetValue } from '../content/types';
 import type { ParamSpec } from '../engine/types';
+import { ExplainMark } from './ExplainMark';
+import { paramHelpId } from './helpEntries';
 import { PARAM_NOTES, formatParamValue, paramLabel } from './kidLabels';
 
 interface Props {
@@ -32,6 +34,7 @@ export function ParamControl({ spec, value, presets, highlighted, showNote = tru
       <label className="plabel" htmlFor={id}>
         {label} <span className="sym">({symbol})</span>
       </label>
+      <ExplainMark id={paramHelpId(spec.key)} className="mark-param" />
       <div className="prow">
         <input
           id={id}

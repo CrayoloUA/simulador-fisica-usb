@@ -63,6 +63,8 @@
 :root {
   --font-serif: 'Literata', 'IBM Plex Sans', Georgia, serif;
   --font-sans: 'IBM Plex Sans', system-ui, 'Segoe UI', sans-serif;
+  /* Ecuaciones (MathML): fuentes matemáticas que ya trae cada sistema; `math` es la familia genérica. */
+  --font-math: 'Cambria Math', 'STIX Two Math', 'Latin Modern Math', 'Libertinus Math', 'Noto Sans Math', math, var(--font-serif);
 
   /* Escala de 1,25 desde 18 px (proyector). 16 px es el mínimo absoluto. */
   --text-small: 1rem;
@@ -102,6 +104,9 @@
   --icon-sm: 1rem;
   --dot: 2rem;
   --swatch: 2.25rem;
+  /* Marcas del modo "¿Qué es esto?": objetivo de 44 px y círculo visible de 28 px. */
+  --mark: 2.75rem;
+  --mark-ic: 1.75rem;
 
   /* Medidas de la pantalla. */
   --w-drawer: 22rem;
@@ -110,16 +115,34 @@
   --w-sheet: 46rem;
   --w-switch: 4.25rem;
   --w-notice: 30rem;
+  --w-card: 30rem;
+  /* Alto máximo de la tarjeta de explicación en escritorio (más bajo si la ventana es baja). */
+  --h-card: 32rem;
+  /* Alto máximo de la hoja de explicación en el celular. */
+  --sheet-max: 70dvh;
   --min-app: 40rem;
   --gutter: var(--s5);
   --pend-h: 18rem;
   --chart-h: 11.5rem;
 
+  /* Movimiento (fase D5). Solo transform y opacity; entradas con --ease (salida fuerte), menos de
+     300 ms. Frecuencia manda: lo que se usa decenas de veces al día es casi imperceptible; Play,
+     Pausa y los deslizadores no se animan. Con "reducir movimiento" los desplazamientos y las
+     escalas se quitan y todo fundido dura lo mismo que el más corto (ver el final de este archivo). */
   --ease: cubic-bezier(0.25, 1, 0.5, 1);
-  --t-fast: 120ms;
-  --t-base: 180ms;
+  --t-press: 80ms; /* pulsación de un botón táctil */
+  --t-fast: 120ms; /* color, marcas, salida de la hoja de Teoría */
+  --t-quick: 150ms; /* tarjeta de explicación, cambio de etapa de la lección */
+  --t-base: 180ms; /* avisos, comprobación, cajón, pomo del interruptor */
+  --t-enter: 200ms; /* entrada de la hoja de Teoría y su fondo */
+  --lift-sm: 4px; /* subida de un aviso al aparecer */
+  --lift-md: 6px; /* subida de la retroalimentación de la comprobación */
+  --lift-lg: 8px; /* subida de la hoja de Teoría */
+  --pop-from: 0.96; /* tamaño de partida de la tarjeta (nunca desde cero) */
+  --press: 0.98; /* tamaño de un botón mientras se pulsa */
   --shadow-pop: 0 1px 2px rgba(20, 26, 41, 0.1), 0 6px 16px rgba(20, 26, 41, 0.1);
   --scrim: rgba(20, 26, 41, 0.45);
+  --scroll-shade: rgba(20, 26, 41, 0.24); /* sombra al borde de un cuadro que aún se puede desplazar */
 
   /* Trazos y marcas del canvas (los lee src/render/theme.ts). */
   --stroke-thin: 1.5px;
@@ -138,5 +161,17 @@
   :root {
     --shadow-pop: 0 1px 2px oklch(0.22 0.03 265 / 0.1), 0 6px 16px oklch(0.22 0.03 265 / 0.1);
     --scrim: oklch(0.22 0.03 265 / 0.45);
+    --scroll-shade: oklch(0.22 0.03 265 / 0.24);
+  }
+}
+
+/* "Reducir movimiento": menos y más suave, no cero. Los fundidos de opacidad se conservan (ayudan a
+   entender que algo cambió) y duran lo mismo que el más corto; los desplazamientos y las escalas los
+   quita el final de styles.css. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-quick: var(--t-fast);
+    --t-base: var(--t-fast);
+    --t-enter: var(--t-fast);
   }
 }

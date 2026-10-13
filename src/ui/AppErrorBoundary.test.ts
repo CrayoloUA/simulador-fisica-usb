@@ -17,7 +17,7 @@ describe('AppErrorBoundary', () => {
     const html = renderToStaticMarkup(createElement(ErrorFallback));
     expect(html).toContain('role="alert"');
     expect(html).toContain('Recargar');
-    expect(html).toMatch(/Algo salió mal/);
+    expect(html).toMatch(/El simulador se trabó/);
   });
 
   it('no filtra detalles internos: el texto no depende del error', () => {

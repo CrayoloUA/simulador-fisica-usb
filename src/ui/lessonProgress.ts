@@ -71,12 +71,13 @@ export function answerVerdict(answerId: string | null | undefined, correctOption
 
 /**
  * Aperturas que puede traer una explicación ("Casi: ...") y que el veredicto mostrado hace suyas.
- * Una respuesta equivocada puede abrir con "No", "No tanto", "Casi" o "Revisa de nuevo"; una
+ * Una respuesta equivocada puede abrir con "No", "No tanto", "Casi", "Revisa de nuevo", "Mira otra vez" o
+ * "Fíjate" (varias, para que el niño no lea siempre el mismo reproche); una
  * correcta, con "Correcto". El orden importa: "No tanto" va antes que "No".
  */
 const OPENERS: Record<Verdict, string[]> = {
   correct: ['Correcto'],
-  wrong: ['No tanto', 'No', 'Casi', 'Revisa de nuevo'],
+  wrong: ['No tanto', 'No', 'Casi', 'Revisa de nuevo', 'Mira otra vez', 'Fíjate'],
 };
 
 export interface VerdictText {
@@ -116,8 +117,8 @@ export interface PredictionVerdict {
 
 export function predictionVerdict(correct: boolean): PredictionVerdict {
   return correct
-    ? { tone: 'ok', text: 'Tu predicción inicial fue correcta.' }
-    : { tone: 'info', text: 'Tu predicción inicial no coincidió con lo observado, y eso también es parte de aprender.' };
+    ? { tone: 'ok', text: 'Tu predicción salió bien.' }
+    : { tone: 'info', text: 'Tu predicción no coincidió con lo que viste. Para eso se hacen las pruebas.' };
 }
 
 /**

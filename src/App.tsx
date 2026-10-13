@@ -1,6 +1,7 @@
-import { ArrowCounterClockwise, Pause, Play, SlidersHorizontal, Warning, XCircle } from '@phosphor-icons/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowCounterClockwise, Pause, Play, Question, SlidersHorizontal, Warning, XCircle } from '@phosphor-icons/react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { advance, answerCheck, initialFlowState, predict, type FlowState } from './content/experimentFlow';
+import { ELEMENT_ID } from './content/elementHelp';
 import { simplePendulumContent } from './content/simplePendulumContent';
 import { describeModelChange, switchModel } from './engine/modelSwitch';
 import { formatNumber } from './engine/numbers';
@@ -9,6 +10,10 @@ import type { Params } from './engine/types';
 import { clampToSpec, defaultParams } from './engine/validate';
 import { modeAnnouncement, runAnnouncement } from './ui/announcements';
 import { escapeClosesDrawer } from './ui/escapeScope';
+import { ExplainCard, type CloseReason } from './ui/ExplainCard';
+import { ExplainContext, type ExplainContextValue } from './ui/ExplainContext';
+import { ExplainMark } from './ui/ExplainMark';
+import { EXPLAIN_BUTTON_LABEL, EXPLAIN_HINT, explainAnnouncement, nextOpenId } from './ui/explain';
 import { EXPERIMENT_START_SPEED, paramsForExperimentStart } from './ui/experimentEntry';
 import { buildHelpEntries } from './ui/helpEntries';
 import { LAB_TITLE, MAIN_PARAM_KEYS, MODEL_LABELS, MODES, type Mode } from './ui/kidLabels';
@@ -17,6 +22,7 @@ import { lessonInlineItems, presetsVisible } from './ui/lessonLayout';
 import { describeModelNotice } from './ui/modelNotice';
 import { MoreOptions } from './ui/MoreOptions';
 import { ParamControl } from './ui/ParamControl';
+import { asideReadingOrder, type AsidePart } from './ui/readingOrder';
 import { ResultsPanel } from './ui/ResultsPanel';
 import { Segmented } from './ui/Segmented';
 import { SimulationView } from './ui/SimulationView';
@@ -57,6 +63,12 @@ export default function App() {
   const [flowState, setFlowState] = useState<FlowState | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [theoryOpen, setTheoryOpen] = useState(false);
+  // Modo "¿Qué es esto?": encendido, hay marcas junto a cada parte explicable y, de la que se toca,
+  // una sola tarjeta abierta. Se guarda también la marca tocada: de ella cuelga la tarjeta y a ella
+  // vuelve el foco.
+  const [explaining, setExplaining] = useState(false);
+  const [explainOpen, setExplainOpen] = useState<{ id: string; anchor: HTMLElement } | null>(null);
+  const explainOpenRef = useRef(explainOpen);
   const moreButton = useRef<HTMLButtonElement>(null);
   const drawerTitle = useRef<HTMLHeadingElement>(null);
   const noticeText = useRef<HTMLParagraphElement>(null);
@@ -69,6 +81,7 @@ export default function App() {
   const drawerSpecs = phenomenon.paramSchema.filter((spec) => !MAIN_PARAM_KEYS.includes(spec.key));
   const maxPhi0 = phenomenon.paramSchema.find((spec) => spec.key === 'phi0')?.max ?? 0;
   const helpEntries = useMemo(() => buildHelpEntries(content, phenomenon.paramSchema), [phenomenon]);
+  const helpById = useMemo(() => new Map(helpEntries.map((entry) => [entry.id, entry])), [helpEntries]);
   const withinSmallAngle = phenomenon.modelLimits.every((limit) => limit.evaluate(params).valid);
   const results = phenomenon.outputs(phenomenon.initialState(params), params);
   const modelNotice = describeModelNotice({
@@ -133,10 +146,48 @@ export default function App() {
   }, [theoryOpen]);
 
   useEffect(() => {
+    explainOpenRef.current = explainOpen;
+  }, [explainOpen]);
+
+  /** Cierra la tarjeta de explicación. Con Escape o el botón el foco vuelve a la marca; con un toque fuera, solo si no quedó en ningún otro control. */
+  const closeExplainCard = useCallback((reason: CloseReason) => {
+    const current = explainOpenRef.current;
+    if (!current) return;
+    setExplainOpen(null);
+    if (reason === 'escape' || reason === 'button') {
+      current.anchor.focus({ preventScroll: true });
+    } else if (reason === 'outside') {
+      requestAnimationFrame(() => {
+        const active = document.activeElement;
+        if ((!active || active === document.body) && current.anchor.isConnected) current.anchor.focus({ preventScroll: true });
+      });
+    }
+  }, []);
+
+  const toggleExplain = useCallback((id: string, mark: HTMLElement) => {
+    setExplainOpen((current) => (nextOpenId(current?.id ?? null, id) === null ? null : { id, anchor: mark }));
+  }, []);
+
+  const handleExplainToggle = () => {
+    const next = !explaining;
+    setExplaining(next);
+    if (!next) setExplainOpen(null);
+    announce(explainAnnouncement(next));
+  };
+
+  // Con la hoja de Teoría abierta el fondo queda inert: la tarjeta de explicación se cierra.
+  useEffect(() => {
+    if (theoryOpen) setExplainOpen(null);
+  }, [theoryOpen]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       if (theoryOpen) {
         setTheoryOpen(false);
+        event.preventDefault();
+      } else if (explainOpenRef.current) {
+        closeExplainCard('escape');
         event.preventDefault();
       } else if (drawerOpen && escapeClosesDrawer(document.activeElement, document.getElementById('drawer'), moreButton.current)) {
         closeDrawer();
@@ -145,7 +196,7 @@ export default function App() {
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [theoryOpen, drawerOpen]);
+  }, [theoryOpen, drawerOpen, closeExplainCard]);
 
   /** Cambia de modelo: ajusta φ₀, detiene y reinicia la simulación y lo anuncia siempre. */
   const changeModel = (next: PendulumModel, closeExperiment: boolean) => {
@@ -245,11 +296,13 @@ export default function App() {
   // una barra fija abajo y van al final del DOM: así el orden de Tab es el orden visual en los dos.
   const actionsBar = (
     <div className="actions">
+      <ExplainMark id={ELEMENT_ID.play} />
       {/* aria-disabled y no disabled: el botón conserva el foco y el lector lo anuncia. */}
       <button type="button" className="btn play" aria-disabled={simError !== null} onClick={handlePlay}>
         {running ? <Pause className="ic" weight="fill" aria-hidden="true" /> : <Play className="ic" weight="fill" aria-hidden="true" />}
         {running ? 'Pausa' : <span lang="en">Play</span>}
       </button>
+      <ExplainMark id={ELEMENT_ID.reiniciar} />
       <button type="button" className="btn sec" onClick={handleReset}>
         <ArrowCounterClockwise className="ic" weight="bold" aria-hidden="true" />
         Reiniciar
@@ -257,12 +310,121 @@ export default function App() {
     </div>
   );
 
+  // La lección del modo Experimentos. En escritorio vive en la columna de controles; en el celular se
+  // ve arriba del péndulo, así que va antes de él en el DOM (el orden de Tab es el orden visual).
+  const lessonCard = inExperiments ? (
+    <LessonCard
+      experiments={content.experiments}
+      experiment={activeExperiment}
+      flow={flowState}
+      inlineItems={
+        <StepInlineItems
+          items={inlineItems}
+          specs={phenomenon.paramSchema}
+          params={params}
+          presets={content.presets}
+          results={results}
+          onParamChange={handleParamChange}
+        />
+      }
+      onSelectExperiment={handleSelectExperiment}
+      onPredict={(optionId) => setFlowState((state) => (state ? predict(state, optionId) : state))}
+      onAnswerCheck={(optionId) => setFlowState((state) => (state ? answerCheck(state, optionId) : state))}
+      onAdvance={handleAdvanceFlow}
+      onPrepare={handlePrepare}
+      onExit={handleExitExperiment}
+    />
+  ) : null;
+
+  // Las partes de la columna de controles. Se colocan en el DOM en el orden en que se ven (ver
+  // `asideReadingOrder`), así Tab y el lector de pantalla las recorren como el estudiante las ve.
+  const asideParts: Record<AsidePart, ReactNode> = {
+    alert: simError && (
+      <div className="alert" role="alert">
+        <XCircle className="ic" weight="bold" aria-hidden="true" />
+        <p>{simError} Presiona Reiniciar para volver a empezar.</p>
+      </div>
+    ),
+    params: (
+      <div className="params">
+        {mainSpecs.map((spec) => (
+          <ParamControl
+            key={spec.key}
+            spec={spec}
+            value={params[spec.key]}
+            presets={presetsVisible(inExperiments, currentStep) ? content.presets[spec.key] : undefined}
+            highlighted={currentStep?.highlightParamKey === spec.key}
+            showNote={!inExperiments}
+            onChange={(value) => handleParamChange(spec.key, value)}
+          />
+        ))}
+      </div>
+    ),
+    results: <ResultsPanel results={results} highlightedKey={currentStep?.highlightResultKey} />,
+    // El aviso visible no es región viva: lleva el porcentaje exacto, que cambia con el
+    // deslizador y se leería en cada paso.
+    status: (
+      <div className="status">
+        {modelNotice && (
+          <div className="notice" data-kind={modelNotice.kind}>
+            <Warning className="ic" weight="bold" aria-hidden="true" />
+            <div className="nbody">
+              <p ref={noticeText} tabIndex={-1} className="focus-target">
+                {modelNotice.text}
+              </p>
+              {modelNotice.offerComparison && (
+                <button type="button" className="btn sec" onClick={handleShowComparison}>
+                  Ver la comparación
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    ),
+    more: !inExperiments && (
+      <div className="more">
+        <button
+          ref={moreButton}
+          type="button"
+          className="btn sec"
+          aria-expanded={drawerOpen}
+          aria-controls="drawer"
+          onClick={() => (drawerOpen ? closeDrawer() : openDrawer())}
+        >
+          <SlidersHorizontal className="ic" weight="bold" aria-hidden="true" />
+          Más opciones
+        </button>
+        <ExplainMark id={ELEMENT_ID.masOpciones} />
+      </div>
+    ),
+  };
+
+  const explainValue = useMemo<ExplainContextValue>(
+    () => ({ active: explaining, openId: explainOpen?.id ?? null, entries: helpById, toggle: toggleExplain }),
+    [explaining, explainOpen, helpById, toggleExplain],
+  );
+  const openEntry = explaining && explainOpen ? helpById.get(explainOpen.id) : undefined;
+
   return (
-    <>
+    <ExplainContext.Provider value={explainValue}>
       {/* Con la hoja de Teoría abierta, el fondo queda inert: ni foco ni lector de pantalla. */}
-      <main className="app" data-modo={mode} data-drawer={drawerOpen && !inExperiments ? 'open' : 'closed'} inert={theoryOpen}>
+      <main
+        className="app"
+        data-modo={mode}
+        data-drawer={drawerOpen && !inExperiments ? 'open' : 'closed'}
+        data-explicar={explaining ? 'si' : undefined}
+        inert={theoryOpen}
+      >
         <header className="top">
           <h1>{LAB_TITLE}</h1>
+          {/* Un solo botón enciende las marcas de ayuda; la pantalla normal no cambia. */}
+          <button type="button" className="btn sec explain-toggle" aria-pressed={explaining} onClick={handleExplainToggle}>
+            <Question className="ic" weight={explaining ? 'fill' : 'bold'} aria-hidden="true" />
+            {EXPLAIN_BUTTON_LABEL}
+          </button>
+          {/* No es región viva: el anuncio de lectores de pantalla ya lleva esta misma frase (explainAnnouncement). */}
+          <p className="explain-hint">{explaining ? EXPLAIN_HINT : ''}</p>
           <Segmented
             name="modo"
             className="modes"
@@ -273,6 +435,8 @@ export default function App() {
           />
         </header>
 
+        {isNarrow && lessonCard}
+
         <SimulationView
           phenomenon={phenomenon}
           params={params}
@@ -280,95 +444,23 @@ export default function App() {
           speed={speed}
           resetToken={resetToken}
           showLinear={showLinear}
+          explaining={explaining}
           onError={handleSimError}
         />
 
         <aside className="aside" aria-label="Controles y resultados">
-          {inExperiments && (
-            <LessonCard
-              experiments={content.experiments}
-              experiment={activeExperiment}
-              flow={flowState}
-              inlineItems={
-                <StepInlineItems
-                  items={inlineItems}
-                  specs={phenomenon.paramSchema}
-                  params={params}
-                  presets={content.presets}
-                  results={results}
-                  onParamChange={handleParamChange}
-                />
-              }
-              onSelectExperiment={handleSelectExperiment}
-              onPredict={(optionId) => setFlowState((state) => (state ? predict(state, optionId) : state))}
-              onAnswerCheck={(optionId) => setFlowState((state) => (state ? answerCheck(state, optionId) : state))}
-              onAdvance={handleAdvanceFlow}
-              onPrepare={handlePrepare}
-              onExit={handleExitExperiment}
-            />
-          )}
+          {!isNarrow && lessonCard}
           {!isNarrow && actionsBar}
           <div className="aside-scroll">
-            {simError && (
-              <div className="alert" role="alert">
-                <XCircle className="ic" weight="bold" aria-hidden="true" />
-                <p>{simError} Presiona Reiniciar para volver a empezar.</p>
-              </div>
-            )}
-            <div className="params">
-              {mainSpecs.map((spec) => (
-                <ParamControl
-                  key={spec.key}
-                  spec={spec}
-                  value={params[spec.key]}
-                  presets={presetsVisible(inExperiments, currentStep) ? content.presets[spec.key] : undefined}
-                  highlighted={currentStep?.highlightParamKey === spec.key}
-                  showNote={!inExperiments}
-                  onChange={(value) => handleParamChange(spec.key, value)}
-                />
-              ))}
-            </div>
-            <ResultsPanel results={results} highlightedKey={currentStep?.highlightResultKey} />
-            {/* El aviso visible no es región viva: lleva el porcentaje exacto, que cambia con el
-                deslizador y se leería en cada paso. */}
-            <div className="status">
-              {modelNotice && (
-                <div className="notice" data-kind={modelNotice.kind}>
-                  <Warning className="ic" weight="bold" aria-hidden="true" />
-                  <div className="nbody">
-                    <p ref={noticeText} tabIndex={-1} className="focus-target">
-                      {modelNotice.text}
-                    </p>
-                    {modelNotice.offerComparison && (
-                      <button type="button" className="btn sec" onClick={handleShowComparison}>
-                        Ver la comparación
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            {asideReadingOrder({ narrow: isNarrow, experiments: inExperiments }).map((part) => (
+              <Fragment key={part}>{asideParts[part]}</Fragment>
+            ))}
             {/* La región de estado existe siempre y solo cambia su texto. Lleva un texto estable (el
                 aviso de ángulo grande sin cifras, o el anuncio de la última acción): así el lector no
                 repite nada en cada paso del deslizador. */}
             <div role="status" className="sr-only">
               <span key={announcement?.id ?? 'aviso'}>{announcement?.text ?? modelNotice?.spoken ?? ''}</span>
             </div>
-            {!inExperiments && (
-              <div className="more">
-                <button
-                  ref={moreButton}
-                  type="button"
-                  className="btn sec"
-                  aria-expanded={drawerOpen}
-                  aria-controls="drawer"
-                  onClick={() => (drawerOpen ? closeDrawer() : openDrawer())}
-                >
-                  <SlidersHorizontal className="ic" weight="bold" aria-hidden="true" />
-                  Más opciones
-                </button>
-              </div>
-            )}
           </div>
           {isNarrow && actionsBar}
         </aside>
@@ -393,6 +485,9 @@ export default function App() {
             onOpenTheory={openTheory}
           />
         )}
+        {/* Con la hoja de explicación abierta la página gana espacio al final (dentro de <main>, para que la
+            barra fija de Play siga pegada abajo): así cualquier marca se puede subir por encima de la hoja. */}
+        {isNarrow && openEntry && <div className="sheet-spacer" aria-hidden="true" />}
       </main>
 
       <TheoryPanel
@@ -403,6 +498,11 @@ export default function App() {
         formulaText={content.formula.describe(params, results)}
         entries={helpEntries}
       />
-    </>
+
+      {/* Una sola tarjeta a la vez, fuera del <main> (que queda inert con la Teoría abierta). */}
+      {openEntry && explainOpen && (
+        <ExplainCard entry={openEntry} anchor={explainOpen.anchor} sheet={isNarrow} onClose={closeExplainCard} />
+      )}
+    </ExplainContext.Provider>
   );
 }

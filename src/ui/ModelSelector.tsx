@@ -1,4 +1,6 @@
 import type { PendulumModel } from '../engine/phenomena/pendulum';
+import { ELEMENT_ID } from '../content/elementHelp';
+import { ExplainMark } from './ExplainMark';
 import { MODEL_CHANGE_WARNING, MODEL_LABELS, MODEL_ORDER, modelNote } from './kidLabels';
 import { Segmented } from './Segmented';
 
@@ -19,7 +21,10 @@ interface Props {
 export function ModelSelector({ model, onChange, maxPhi0 }: Props) {
   return (
     <>
-      <h3 id="h-calc">Cómo se calcula</h3>
+      <div className="withmark">
+        <h3 id="h-calc">Cómo se calcula</h3>
+        <ExplainMark id={ELEMENT_ID.calculo} />
+      </div>
       <Segmented
         name="modelo"
         className="choice"

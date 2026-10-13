@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { simplePendulumContent } from '../content/simplePendulumContent';
 import { pendulumModels } from '../engine/phenomena/pendulum';
-import { buildHelpEntries, paramHelpId, resultHelpId } from './helpEntries';
+import { HEADING_IF_NOT, HEADING_WHAT, HEADING_WHY, buildHelpEntries, paramHelpId, resultHelpId } from './helpEntries';
 
 const schema = pendulumModels['no-lineal'].paramSchema;
 const entries = buildHelpEntries(simplePendulumContent, schema);
@@ -21,11 +21,35 @@ describe('buildHelpEntries', () => {
     expect(mass.sections.map((s) => s.text)).toEqual([help.origin, help.role, help.effect]);
   });
 
-  it('los resultados llevan su texto único real', () => {
+  it('los resultados llevan su explicación real como "Qué es" y luego los otros dos bloques', () => {
     const period = entries.find((entry) => entry.id === resultHelpId('T'))!;
-    expect(period.sections).toHaveLength(1);
+    expect(period.sections.map((s) => s.heading)).toEqual([HEADING_WHAT, HEADING_WHY, HEADING_IF_NOT]);
     const help = simplePendulumContent.resultHelp.find((h) => h.resultKey === 'T')!;
-    expect(period.sections[0].text).toBe(help.explanation);
+    const extra = simplePendulumContent.resultExtras.find((e) => e.resultKey === 'T')!;
+    expect(period.sections.map((s) => s.text)).toEqual([help.explanation, extra.why, extra.ifNot]);
+  });
+
+  it('la diferencia en % (sin resultHelp) toma su "Qué es" de resultExtras', () => {
+    const diff = entries.find((entry) => entry.id === resultHelpId('periodError'))!;
+    const extra = simplePendulumContent.resultExtras.find((e) => e.resultKey === 'periodError')!;
+    expect(diff.title).toBe('Diferencia (T − T₀)/T₀');
+    expect(diff.sections[0].text).toBe(extra.what);
+  });
+
+  it('las demás partes de la pantalla llevan los tres bloques, con sus encabezados', () => {
+    for (const help of simplePendulumContent.elementHelp) {
+      const entry = entries.find((e) => e.id === help.id)!;
+      expect(entry.title).toBe(help.title);
+      expect(entry.sections.map((s) => s.heading)).toEqual([HEADING_WHAT, HEADING_WHY, HEADING_IF_NOT]);
+      expect(entry.sections.map((s) => s.text)).toEqual([help.what, help.why, help.ifNot]);
+    }
+  });
+
+  it('todas las entradas tienen texto en cada bloque', () => {
+    for (const entry of entries) {
+      expect(entry.sections.length).toBeGreaterThanOrEqual(1);
+      for (const section of entry.sections) expect(section.text.trim()).not.toBe('');
+    }
   });
 
   it('los títulos usan el nombre para niños con su símbolo', () => {

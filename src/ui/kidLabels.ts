@@ -108,7 +108,7 @@ export function formatParamValue(key: string, value: number): ParamValueText {
 /** Notas que van bajo el control, en la capa de interfaz (la masa y el rozamiento viven en el cajón). */
 export const PARAM_NOTES: Record<string, string> = {
   m: 'La masa no cambia el movimiento.',
-  b: 'Con rozamiento, el péndulo va perdiendo vaivén.',
+  b: 'Con rozamiento, el péndulo va perdiendo movimiento.',
 };
 
 export interface ResultLabel {
@@ -123,7 +123,7 @@ export interface ResultLabel {
 
 /** Orden en que se muestran: primero los principales, después los datos para curiosos. */
 export const RESULT_LABELS: Record<string, ResultLabel> = {
-  T: { label: 'Período', symbol: 'T', unit: 's', decimals: 3, note: 'tiempo de un vaivén completo' },
+  T: { label: 'Período', symbol: 'T', unit: 's', decimals: 3, note: 'tiempo de una ida y vuelta completa' },
   f: { label: 'Frecuencia', symbol: 'f', unit: 'Hz', decimals: 3, note: '' },
   T0: {
     label: 'Período con ángulo pequeño',
